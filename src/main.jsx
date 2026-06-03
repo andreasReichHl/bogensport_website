@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import './index.css'
 import Datenschutz from './pages/Datenschutz.jsx'
+import Gallerie from "./pages/Gallerie.jsx";
 import HomePage from './pages/HomePage.jsx'
 import Impressum from './pages/Impressum.jsx'
 import Layout from './Layout.jsx'
@@ -45,6 +46,10 @@ const router = createBrowserRouter(
         {
           path: 'termine',
           element: <Termine />,
+        },
+        {
+          path: 'gallerie',
+          element: <Gallerie />,
         },
         {
           path: 'impressum',

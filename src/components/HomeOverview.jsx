@@ -1,6 +1,7 @@
 import {Link} from "react-router-dom";
 
 import UpcomingEvents from "./UpcomingEvents.jsx";
+import {useGalleryImages} from "../utils/useGalleryImages.js";
 
 const infoItems = [
     {
@@ -74,6 +75,9 @@ function InfoIcon({children}) {
 }
 
 export default function HomeOverview() {
+    const {galleryImages, isLoading} = useGalleryImages();
+    const previewImages = galleryImages.slice(0, 5);
+
     return (
         <section className="bg-slate-50 pt-5">
             <div className="relative z-20 mx-auto max-w-8xl px-5 sm:px-8 lg:px-12">
@@ -130,6 +134,52 @@ export default function HomeOverview() {
                     <UpcomingEvents limit={2} showAllLink/>
                 </aside>
             </div>
+
+            <section className="mx-auto max-w-7xl px-5 pb-14 sm:px-8 lg:px-12 lg:pb-20">
+                <div className="mb-5 flex items-end justify-between gap-6">
+                    <div>
+                        <p className="font-heading text-sm font-bold uppercase tracking-wide text-blue-700">
+                            Galerie
+                        </p>
+                        <h2 className="mt-3 font-heading text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">
+                            Einblicke in unseren Verein
+                        </h2>
+                    </div>
+                    <Link
+                        to="/gallerie"
+                        className="hidden shrink-0 text-sm font-bold text-[#002f5f] transition hover:text-blue-700 sm:inline-flex"
+                    >
+                        Zur Gallerie <span aria-hidden="true">→</span>
+                    </Link>
+                </div>
+
+                {!isLoading && previewImages.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                        {previewImages.map((image) => (
+                            <Link
+                                key={image.src}
+                                to="/gallerie"
+                                className="group block overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-200"
+                                aria-label="Zur Gallerie"
+                            >
+                                <img
+                                    src={image.src}
+                                    alt={image.alt}
+                                    loading="lazy"
+                                    className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-105"
+                                />
+                            </Link>
+                        ))}
+                    </div>
+                )}
+
+                <Link
+                    to="/gallerie"
+                    className="mt-5 inline-flex text-sm font-bold text-[#002f5f] transition hover:text-blue-700 sm:hidden"
+                >
+                    Zur Gallerie <span aria-hidden="true">→</span>
+                </Link>
+            </section>
         </section>
     );
 }

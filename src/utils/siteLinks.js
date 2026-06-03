@@ -9,6 +9,7 @@ export const mainNavigationLinks = [
   { label: "Verein", to: "/verein" },
   { label: "Training", to: "/training" },
   { label: "Termine", to: "/termine" },
+  { label: "Gallerie", to: "/gallerie" },
 ];
 
 export const trialTrainingLink = { label: "Probetraining anfragen", to: "/probetraining" };
