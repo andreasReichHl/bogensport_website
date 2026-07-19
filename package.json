@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "serve:php": "npm run build && php -S 127.0.0.1:8000 -t dist",
     "lint": "eslint .",
     "preview": "vite preview"
   },

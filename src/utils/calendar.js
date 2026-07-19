@@ -1,10 +1,18 @@
 const calendarUrl =
   import.meta.env.VITE_CALENDAR_ICS_URL ||
-  "https://nx92511.your-storageshare.de/remote.php/dav/public-calendars/5JpmMnqbqQrMCyYL?export";
-const proxyUrls = [
-  `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(calendarUrl)}`,
-  `https://api.allorigins.win/get?url=${encodeURIComponent(calendarUrl)}`,
-];
+  "/calendar-proxy.php";
+
+function getCalendarFetchUrls() {
+  if (!/^https?:\/\//.test(calendarUrl)) {
+    return [calendarUrl];
+  }
+
+  return [
+    calendarUrl,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(calendarUrl)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(calendarUrl)}`,
+  ];
+}
 
 function unfoldIcsLines(icsText) {
   return icsText.replace(/\r?\n[ \t]/g, "").split(/\r?\n/);
@@ -145,10 +153,9 @@ function decodeBase64DataUri(dataUri) {
 }
 
 async function fetchCalendarText() {
-  const urls = [calendarUrl, ...proxyUrls];
   let lastError = null;
 
-  for (const url of urls) {
+  for (const url of getCalendarFetchUrls()) {
     try {
       const response = await fetch(url);
 

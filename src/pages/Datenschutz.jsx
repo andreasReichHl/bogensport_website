@@ -2,7 +2,7 @@ export default function Datenschutz() {
   return (
     <section className="bg-white px-4 py-12 text-slate-900 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
-        <h1 className="mb-8 break-words font-heading text-3xl font-bold leading-tight text-[#002f5f] sm:mb-10 sm:text-4xl">
+        <h1 className="mb-8 wrap-break-word font-heading text-3xl font-bold leading-tight text-[#002f5f] sm:mb-10 sm:text-4xl">
           Datenschutzerklärung
         </h1>
 
@@ -22,14 +22,14 @@ export default function Datenschutz() {
             <p className="mt-4">Vertreten durch den Vorstand gemäß § 26 BGB</p>
             <p className="mt-4">
               E-Mail:{" "}
-              <a className="text-[#002f5f] underline-offset-4 hover:underline" href="mailto:vorstand@badoldesloe-bogensport.de">
+              <a className="text-[#002f5f] underline-offset-4 hover:underline" href="mailto:vorstand@badoldesloer-bogensport.de">
                 vorstand@badoldesloer-bogensport.de
               </a>
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">Ihre Betroffenenrechte</h2>
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">Ihre Betroffenenrechte</h2>
             <p className="mb-4">
               Unter den angegebenen Kontaktdaten können Sie jederzeit folgende Rechte ausüben:
             </p>
@@ -53,7 +53,7 @@ export default function Datenschutz() {
             </p>
             <p className="mt-4">
               Sie können sich jederzeit mit einer Beschwerde an eine Aufsichtsbehörde wenden, z. B. an die zuständige
-              Aufsichtsbehörde des Bundeslands Ihres Wohnsitzes oder an die für uns als verantwortliche Stelle
+              Aufsichtsbehörde des Bundeslandes Ihres Wohnsitzes oder an die für uns als verantwortliche Stelle
               zuständige Behörde.
             </p>
             <p className="mt-4">
@@ -70,7 +70,7 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Erfassung allgemeiner Informationen beim Besuch unserer Website
             </h2>
             <h3 className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</h3>
@@ -121,7 +121,7 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Kontaktaufnahme per E-Mail
             </h2>
             <h3 className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</h3>
@@ -158,7 +158,7 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Cookies, Tracking und externe Dienste
             </h2>
             <p>
@@ -173,7 +173,7 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Änderung unserer Datenschutzbestimmungen
             </h2>
             <p>
@@ -184,7 +184,7 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">Fragen an den Datenschutzbeauftragten</h2>
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">Fragen an den Datenschutzbeauftragten</h2>
             <p>
               Wenn Sie Fragen zum Datenschutz haben, schreiben Sie uns bitte eine E-Mail oder wenden Sie sich direkt an
               die für den Datenschutz verantwortliche Person in unserer Organisation:
@@ -193,7 +193,7 @@ export default function Datenschutz() {
           </section>
 
           <section className="text-sm text-slate-500">
-            <h2 className="mb-3 break-words font-heading text-base font-bold text-slate-700">Hinweis zur Sprache</h2>
+            <h2 className="mb-3 wrap-break-word font-heading text-base font-bold text-slate-700">Hinweis zur Sprache</h2>
             <p>
               Zur besseren Lesbarkeit wird auf dieser Internetpräsenz das generische Maskulinum verwendet. Alle
               verwendeten Personenbezeichnungen beziehen sich gleichermaßen auf alle Geschlechter.
