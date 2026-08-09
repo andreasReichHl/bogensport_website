@@ -1,6 +1,7 @@
 import logoWhite from "../assets/bobs_logo_white_old.svg";
 import { Link } from "react-router-dom";
 
+import { mailto, siteConfig } from "../utils/siteConfig.js";
 import { downloadLinks, footerNavigationLinks } from "../utils/siteLinks.js";
 
 function Icon({ children }) {
@@ -22,13 +23,13 @@ export default function Footer() {
             <span className="block h-12 w-12 shrink-0 overflow-hidden">
               <img
                 src={logoWhite}
-                alt="Bogensport Bad Oldesloe"
+                alt={siteConfig.shortName}
                 className="h-full w-auto max-w-none"
               />
             </span>
             <div className="leading-tight">
-              <div className="text-sm font-bold tracking-wide">BAD OLDESLOER</div>
-              <div className="text-lg tracking-wide">BOGENSPORT e.V.</div>
+              <div className="text-sm font-bold tracking-wide">{siteConfig.brandLines[0]}</div>
+              <div className="text-lg tracking-wide">{siteConfig.brandLines[1]}</div>
             </div>
           </div>
           <p className="max-w-64 text-sm leading-relaxed text-white/85">
@@ -76,7 +77,7 @@ export default function Footer() {
                   <circle cx="12" cy="10" r="2" fill="#020617" />
                 </svg>
               </Icon>
-              <span>Postfach 1102</span>
+              <span>{siteConfig.address.street}</span>
             </li>
             <li className="flex gap-3">
               <Icon>
@@ -84,7 +85,7 @@ export default function Footer() {
                   <path d="M4 10h16v10H4V10Zm2-6h12v4H6V4Z" fill="none" stroke="currentColor" strokeWidth="2" />
                 </svg>
               </Icon>
-              <span>23831 Bad Oldesloe</span>
+              <span>{siteConfig.address.postalCode} {siteConfig.address.city}</span>
             </li>
             <li className="flex gap-3">
               <Icon>
@@ -92,8 +93,8 @@ export default function Footer() {
                   <path d="M4 6h16v12H4V6Zm0 1 8 6 8-6" fill="none" stroke="currentColor" strokeWidth="2" />
                 </svg>
               </Icon>
-              <a href="mailto:info@badoldesloer-bogensport.de" className="transition hover:text-blue-300">
-                info@badoldesloer-bogensport.de
+              <a href={mailto(siteConfig.emails.info)} className="transition hover:text-blue-300">
+                {siteConfig.emails.info}
               </a>
             </li>
           </ul>

@@ -1,8 +1,10 @@
+import { mailto, siteConfig } from "../utils/siteConfig.js";
+
 export default function Datenschutz() {
   return (
     <section className="bg-white px-4 py-12 text-slate-900 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
-        <h1 className="mb-8 break-words font-heading text-3xl font-bold leading-tight text-[#002f5f] sm:mb-10 sm:text-4xl">
+        <h1 className="mb-8 wrap-break-word font-heading text-3xl font-bold leading-tight text-[#002f5f] sm:mb-10 sm:text-4xl">
           Datenschutzerklärung
         </h1>
 
@@ -13,23 +15,23 @@ export default function Datenschutz() {
               (DSGVO), ist:
             </p>
             <address className="not-italic">
-              Bad Oldesloer Bogensport e.V.
+              {siteConfig.name}
               <br />
-              Postfach 11 02
+              {siteConfig.address.street}
               <br />
-              23831 Bad Oldesloe
+              {siteConfig.address.postalCode} {siteConfig.address.city}
             </address>
             <p className="mt-4">Vertreten durch den Vorstand gemäß § 26 BGB</p>
             <p className="mt-4">
               E-Mail:{" "}
-              <a className="text-[#002f5f] underline-offset-4 hover:underline" href="mailto:vorstand@badoldesloe-bogensport.de">
-                vorstand@badoldesloer-bogensport.de
+              <a className="text-[#002f5f] underline-offset-4 hover:underline" href={mailto(siteConfig.emails.board)}>
+                {siteConfig.emails.board}
               </a>
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">Ihre Betroffenenrechte</h2>
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">Ihre Betroffenenrechte</h2>
             <p className="mb-4">
               Unter den angegebenen Kontaktdaten können Sie jederzeit folgende Rechte ausüben:
             </p>
@@ -70,7 +72,7 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Erfassung allgemeiner Informationen beim Besuch unserer Website
             </h2>
             <h3 className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</h3>
@@ -121,7 +123,7 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Kontaktaufnahme per E-Mail
             </h2>
             <h3 className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</h3>
@@ -158,7 +160,7 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Cookies, Tracking und externe Dienste
             </h2>
             <p>
@@ -167,13 +169,23 @@ export default function Datenschutz() {
               geladen.
             </p>
             <p className="mt-4">
-              Soweit technisch notwendige Daten beim Aufruf der Website verarbeitet werden, erfolgt dies ausschließlich
-              zur Bereitstellung und Sicherheit der Website.
+              Auf den öffentlichen Seiten setzen wir keine Cookies zu Analyse-, Tracking- oder Marketingzwecken ein.
+              Ein Cookie-Banner ist hierfür nicht erforderlich.
+            </p>
+            <p className="mt-4">
+              Für den geschützten Mitgliederbereich kann nach dem Login ein technisch notwendiges Authentifizierungs-
+              Cookie gesetzt werden. Dieses Cookie dient ausschließlich dazu, angemeldete Mitglieder während der Nutzung
+              des Mitgliederbereichs wiederzuerkennen und den Login-Status bereitzustellen. Ohne dieses Cookie kann der
+              Mitgliederbereich nicht genutzt werden.
+            </p>
+            <p className="mt-4">
+              Soweit technisch notwendige Daten beim Aufruf oder bei der Nutzung geschützter Bereiche verarbeitet
+              werden, erfolgt dies ausschließlich zur Bereitstellung, Sicherheit und Funktionsfähigkeit unserer Website.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Änderung unserer Datenschutzbestimmungen
             </h2>
             <p>
@@ -184,16 +196,16 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="mb-3 break-words font-heading text-lg font-bold text-slate-950 sm:text-xl">Fragen an den Datenschutzbeauftragten</h2>
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">Fragen an den Datenschutzbeauftragten</h2>
             <p>
               Wenn Sie Fragen zum Datenschutz haben, schreiben Sie uns bitte eine E-Mail oder wenden Sie sich direkt an
               die für den Datenschutz verantwortliche Person in unserer Organisation:
             </p>
-            <p className="mt-4">Der Vorstand des Bad Oldesloer Bogensport e.V.</p>
+            <p className="mt-4">Der Vorstand des {siteConfig.name}</p>
           </section>
 
           <section className="text-sm text-slate-500">
-            <h2 className="mb-3 break-words font-heading text-base font-bold text-slate-700">Hinweis zur Sprache</h2>
+            <h2 className="mb-3 wrap-break-word font-heading text-base font-bold text-slate-700">Hinweis zur Sprache</h2>
             <p>
               Zur besseren Lesbarkeit wird auf dieser Internetpräsenz das generische Maskulinum verwendet. Alle
               verwendeten Personenbezeichnungen beziehen sich gleichermaßen auf alle Geschlechter.

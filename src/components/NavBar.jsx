@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/bobs_logo_white_old.svg";
+import { siteConfig } from "../utils/siteConfig.js";
 import { downloadLinks, mainNavigationLinks, trialTrainingLink } from "../utils/siteLinks.js";
 
 export default function Navbar() {
@@ -46,13 +47,13 @@ export default function Navbar() {
           <span className="block h-9 w-9 shrink-0 overflow-hidden sm:h-10 sm:w-10 lg:h-11 lg:w-11">
             <img
               src={logo}
-              alt="Bad Oldesloer Bogensport e.V."
+              alt={siteConfig.name}
               className="h-full w-auto max-w-none"
             />
           </span>
           <div className="flex flex-col text-base leading-tight sm:text-lg">
-              <div className="text-sm font-bold tracking-wide">BAD OLDESLOER</div>
-              <div className="text-lg tracking-wide">BOGENSPORT e.V.</div>
+              <div className="text-sm font-bold tracking-wide">{siteConfig.brandLines[0]}</div>
+              <div className="text-lg tracking-wide">{siteConfig.brandLines[1]}</div>
           </div>
         </Link>
 

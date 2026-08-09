@@ -27,8 +27,6 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
   const [events, setEvents] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [status, setStatus] = useState("loading");
-  const currentYear = new Date().getFullYear();
-  const yearOptions = [currentYear, currentYear + 1];
 
   useEffect(() => {
     let isMounted = true;
@@ -69,6 +67,7 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
     ? events.filter((event) => event.startDate.getFullYear() === selectedYear)
     : events;
   const eventYears = new Set(events.map((event) => event.startDate.getFullYear()));
+  const yearOptions = Array.from(eventYears).sort((firstYear, secondYear) => secondYear - firstYear);
 
   if (visibleEvents.length === 0 && !includePast) {
     return <p className="mt-5 text-sm text-slate-600">Aktuell sind keine kommenden Termine eingetragen.</p>;

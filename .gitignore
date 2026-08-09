@@ -26,3 +26,4 @@ dist-ssr
 .env.*
 .env.example
 .env.local
+private/member-area/config.local.php
