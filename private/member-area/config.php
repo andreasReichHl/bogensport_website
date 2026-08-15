@@ -8,10 +8,12 @@ function member_area_config(): array
         return $config;
     }
 
-    $configFile = __DIR__ . '/config.local.php';
+    $configuredConfigFile = getenv('MEMBER_AREA_CONFIG_FILE');
+    $isLocalEnvironment = member_area_is_local_environment();
+    $configFile = $configuredConfigFile ?: __DIR__ . ($isLocalEnvironment ? '/config.local.example.php' : '/config.local.php');
 
     if (!is_file($configFile)) {
-        throw new RuntimeException('Missing member area config.local.php');
+        throw new RuntimeException('Missing member area configuration file');
     }
 
     $config = require $configFile;
@@ -35,4 +37,17 @@ function member_area_config(): array
     $config['diagnostics']['token_hash'] = $config['diagnostics']['token_hash'] ?? '';
 
     return $config;
+}
+
+function member_area_is_local_environment(): bool
+{
+    $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+
+    if ($host === '') {
+        return PHP_SAPI === 'cli';
+    }
+
+    $host = strtolower(explode(':', $host)[0]);
+
+    return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
 }

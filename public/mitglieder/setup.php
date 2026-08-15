@@ -3,6 +3,7 @@
 require_once __DIR__ . '/bootstrap.php';
 require_once MEMBER_AREA_PRIVATE_PATH . '/auth.php';
 require_once MEMBER_AREA_PRIVATE_PATH . '/db.php';
+require_once MEMBER_AREA_PRIVATE_PATH . '/password.php';
 require_once MEMBER_AREA_PRIVATE_PATH . '/view.php';
 
 $config = member_area_config();
@@ -36,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Der Benutzername muss 3 bis 40 Zeichen lang sein und darf nur Buchstaben, Zahlen, Punkt, Unterstrich und Bindestrich enthalten.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Bitte eine gültige E-Mail-Adresse eingeben.';
-    } elseif (strlen($password) < 12) {
-        $error = 'Das Passwort muss mindestens 12 Zeichen lang sein.';
+    } elseif (($passwordError = member_area_validate_password($password)) !== null) {
+        $error = $passwordError;
     } else {
         $statement = member_area_db()->prepare(
             'INSERT INTO users (username, email, password_hash, role, name) VALUES (?, ?, ?, ?, ?)'
@@ -79,7 +80,8 @@ member_area_page_start('Setup');
     </label>
     <label>
       Passwort
-      <input name="password" type="password" autocomplete="new-password" minlength="12" required>
+      <input name="password" type="password" autocomplete="new-password" minlength="8" required>
+      <span class="field-hint"><?= member_area_escape(member_area_password_requirements_text()) ?></span>
     </label>
     <button type="submit">Superadmin erstellen</button>
   </form>

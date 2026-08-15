@@ -7,6 +7,7 @@ import Datenschutz from './pages/Datenschutz.jsx'
 import HomePage from './pages/HomePage.jsx'
 import Impressum from './pages/Impressum.jsx'
 import Layout from './Layout.jsx'
+import News from "./pages/News.jsx";
 import NewsDetail from "./pages/NewsDetail.jsx";
 import Probetraining from "./pages/Probetraining.jsx";
 import Termine from "./pages/Termine.jsx";
@@ -46,6 +47,10 @@ const router = createBrowserRouter(
         {
           path: 'termine',
           element: <Termine />,
+        },
+        {
+          path: 'news',
+          element: <News />,
         },
         {
           path: 'news/:id',

@@ -4,17 +4,27 @@ Der Mitgliederbereich nutzt PHP, MySQL 5.7 und ein JWT in einem `HttpOnly`-Cooki
 
 ## Benötigte Strato-Daten
 
-- Datenbank-Host, meist `rdbms.strato.de`
+- Datenbank-Host, hier `database-5020917382.webspace-host.com`
 - Datenbank-Port, meist `3306`
-- Datenbankname
-- Datenbankbenutzer
+- Datenbankname, hier `dbs15892878`
+- Datenbankbenutzer, hier `dbu740833`
 - Datenbankpasswort
 
 Diese Werte gehören nicht ins Git-Repository.
 
-## Lokale Konfiguration
+## Konfiguration
 
-`private/member-area/config.local.example.php` nach `private/member-area/config.local.php` kopieren und Werte setzen.
+Die Anwendung wählt die Konfiguration automatisch:
+
+- Lokal unter `localhost` oder `127.0.0.1`: `private/member-area/config.local.example.php`
+- Auf Strato/Produktion: `private/member-area/config.local.php`
+
+`config.local.example.php` enthält die lokale Docker-Datenbank.
+`config.local.php` enthält die Strato-Datenbank und muss auf dem Server mit echtem DB-Passwort vorhanden sein.
+
+Optional kann mit der Umgebungsvariable `MEMBER_AREA_CONFIG_FILE` eine konkrete Konfigurationsdatei erzwungen werden.
+
+Auf dem Strato-Server muss `private/member-area/config.local.php` vorhanden sein. Die Datei ist absichtlich nicht im Git-Repository enthalten; vor dem Upload das Passwort unter `db.password` eintragen.
 
 Für `jwt.secret` einen langen zufälligen Wert verwenden, zum Beispiel mindestens 32 Zeichen.
 

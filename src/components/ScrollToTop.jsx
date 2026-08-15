@@ -6,6 +6,9 @@ export default function ScrollToTop() {
 
   useEffect(() => {
     if (hash) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(hash.slice(1))?.scrollIntoView();
+      });
       return;
     }
 

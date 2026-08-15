@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/password.php';
 
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -20,6 +21,13 @@ if (
     !in_array($role, MEMBER_ROLES, true)
 ) {
     fwrite(STDERR, "Usage: php private/member-area/create-user.php username email password superadmin|admin|member \"Name\"\n");
+    exit(1);
+}
+
+$passwordError = member_area_validate_password((string)$password);
+
+if ($passwordError !== null) {
+    fwrite(STDERR, $passwordError . "\n");
     exit(1);
 }
 

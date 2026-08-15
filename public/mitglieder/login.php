@@ -37,10 +37,45 @@ member_area_page_start('Login');
     </label>
     <label>
       Passwort
-      <input name="password" type="password" autocomplete="current-password" required>
+      <span class="password-field">
+        <input id="login_password" name="password" type="password" autocomplete="current-password" required>
+        <button type="button" class="password-toggle" data-password-toggle="login_password" aria-label="Passwort anzeigen" aria-pressed="false">
+          <span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>
+        </button>
+      </span>
     </label>
     <button type="submit">Einloggen</button>
   </form>
 </div>
+<script>
+  document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+    const input = document.getElementById(button.dataset.passwordToggle);
+    const icon = button.querySelector(".material-symbols-outlined");
+
+    if (!input) {
+      return;
+    }
+
+    input.type = "password";
+    button.setAttribute("aria-label", "Passwort anzeigen");
+    button.setAttribute("aria-pressed", "false");
+
+    if (icon) {
+      icon.textContent = "visibility_off";
+    }
+
+    button.addEventListener("click", () => {
+      const showPassword = input.type === "password";
+
+      input.type = showPassword ? "text" : "password";
+      button.setAttribute("aria-label", showPassword ? "Passwort verbergen" : "Passwort anzeigen");
+      button.setAttribute("aria-pressed", showPassword ? "true" : "false");
+
+      if (icon) {
+        icon.textContent = showPassword ? "visibility" : "visibility_off";
+      }
+    });
+  });
+</script>
 <?php
 member_area_page_end();

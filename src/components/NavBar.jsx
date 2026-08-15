@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/bobs_logo_white_old.svg";
-import { downloadLinks, mainNavigationLinks, trialTrainingLink } from "../utils/siteLinks.js";
+import { downloadLinks, mainNavigationLinks } from "../utils/siteLinks.js";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -107,12 +107,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          <Link
-            className="transition hover:text-blue-300"
-            to={trialTrainingLink.to}
-          >
-            {trialTrainingLink.label}
-          </Link>
         </div>
 
         <button
@@ -188,13 +182,6 @@ export default function Navbar() {
             </div>
           )}
         </div>
-        <Link
-          className="border-t border-white/10 py-3 transition hover:text-blue-300"
-          to={trialTrainingLink.to}
-          onClick={() => setIsOpen(false)}
-        >
-          {trialTrainingLink.label}
-        </Link>
       </div>
     </nav>
   );

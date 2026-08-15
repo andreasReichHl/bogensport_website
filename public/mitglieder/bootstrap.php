@@ -6,6 +6,7 @@ function member_area_private_path(): string
 
     $candidates = array_filter([
         $configuredPath ?: null,
+        __DIR__ . '/../private/member-area',
         __DIR__ . '/../../private/member-area',
         __DIR__ . '/../../../private/member-area',
         dirname((string)($_SERVER['DOCUMENT_ROOT'] ?? ''), 1) . '/private/member-area',

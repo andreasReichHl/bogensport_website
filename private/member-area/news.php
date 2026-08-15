@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/db.php';
 
-const MEMBER_AREA_NEWS_ALLOWED_TAGS = '<p><br><strong><b><em><i><u><ul><ol><li><h2><h3><blockquote><a>';
+const MEMBER_AREA_NEWS_ALLOWED_TAGS = '<p><br><strong><b><em><i><u><s><strike><ul><ol><li><h4><h5><h6><blockquote><a><span>';
 
 function member_area_news_retention_days(): int
 {
@@ -76,6 +76,25 @@ function member_area_news_sanitize_html(string $html): string
     $html = preg_replace('/\s(?:on[a-z]+|style)\s*=\s*(".*?"|\'.*?\'|[^\s>]+)/i', '', $html) ?? '';
     $html = preg_replace('/href\s*=\s*("|\')\s*javascript:[^"\']*("|\')/i', 'href="#"', $html) ?? '';
     $html = preg_replace('/<a\s+/i', '<a rel="noopener noreferrer" target="_blank" ', $html) ?? '';
+    $html = preg_replace_callback('/<span\b([^>]*)>/i', static function (array $match): string {
+        if (preg_match('/\bclass\s*=\s*("|\')([^"\']*)\1/i', $match[1], $classMatch)) {
+            $classes = array_intersect(
+                preg_split('/\s+/', trim($classMatch[2])) ?: [],
+                ['news-size-small']
+            );
+
+            if ($classes) {
+                return '<span class="' . htmlspecialchars(implode(' ', $classes), ENT_QUOTES, 'UTF-8') . '">';
+            }
+        }
+
+        return '<span>';
+    }, $html) ?? '';
+    $html = preg_replace(
+        '/<span class="news-size-small">\s*<span class="news-size-small">([\s\S]*?)<\/span>\s*<\/span>/i',
+        '<span class="$1">$2</span>',
+        $html
+    ) ?? '';
 
     return trim($html);
 }
@@ -149,6 +168,28 @@ function member_area_news_delete_image(?string $imagePath): void
     }
 }
 
+function member_area_news_delete_post(int $postId, array $user): bool
+{
+    $statement = member_area_db()->prepare('SELECT id, author_id, image_path FROM news_posts WHERE id = ? LIMIT 1');
+    $statement->execute([$postId]);
+    $post = $statement->fetch();
+
+    if (!$post) {
+        return false;
+    }
+
+    if (!in_array($user['role'] ?? '', ['superadmin', 'admin'], true) && (int)$post['author_id'] !== (int)$user['id']) {
+        return false;
+    }
+
+    member_area_news_delete_image($post['image_path']);
+
+    $delete = member_area_db()->prepare('DELETE FROM news_posts WHERE id = ?');
+    $delete->execute([$postId]);
+
+    return true;
+}
+
 function member_area_news_cleanup_images(): void
 {
     $retentionDays = member_area_news_retention_days();
@@ -207,8 +248,9 @@ function member_area_news_all_posts(): array
     member_area_news_cleanup_images();
 
     $posts = member_area_db()->query(
-        'SELECT news_posts.id, news_posts.title, news_posts.image_path, news_posts.show_public,
-                news_posts.show_members, news_posts.visible_until, news_posts.created_at,
+        'SELECT news_posts.id, news_posts.title, news_posts.body_html, news_posts.image_path,
+                news_posts.show_public, news_posts.show_members, news_posts.visible_until, news_posts.created_at,
+                news_posts.author_id,
                 users.username AS author_username
          FROM news_posts
          INNER JOIN users ON users.id = news_posts.author_id
