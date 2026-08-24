@@ -46,6 +46,26 @@ function member_area_clear_auth_cookie(): void
     setcookie($config['cookie_name'], '', member_area_cookie_options(time() - 3600));
 }
 
+function member_area_render_database_unavailable(Throwable $error): void
+{
+    if (!member_area_is_database_exception($error)) {
+        throw $error;
+    }
+
+    http_response_code(503);
+    require_once __DIR__ . '/view.php';
+    $refreshUrl = (string)($_SERVER['REQUEST_URI'] ?? '/mitglieder/login.php');
+
+    member_area_page_start('Datenbank nicht erreichbar');
+    echo '<div class="panel">';
+    echo '<h1>Mitgliederbereich nicht erreichbar</h1>';
+    echo '<p class="error">' . member_area_escape($error->getMessage()) . '</p>';
+    echo '<p class="form-actions"><a class="button secondary" href="' . member_area_escape($refreshUrl) . '"><span class="material-symbols-outlined" aria-hidden="true">refresh</span> Aktualisieren</a></p>';
+    echo '</div>';
+    member_area_page_end();
+    exit;
+}
+
 function member_area_login(string $identifier, string $password): bool
 {
     $identifier = trim($identifier);
@@ -118,7 +138,15 @@ function member_area_current_user(): ?array
 
 function member_area_require_user(): array
 {
-    $user = member_area_current_user();
+    try {
+        $user = member_area_current_user();
+    } catch (Throwable $error) {
+        if (member_area_is_database_exception($error)) {
+            member_area_render_database_unavailable($error);
+        }
+
+        throw $error;
+    }
 
     if (!$user) {
         header('Location: /mitglieder/login.php');

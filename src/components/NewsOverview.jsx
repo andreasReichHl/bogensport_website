@@ -1,24 +1,46 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+const NEWS_PREVIEW_LIMIT = 3;
+
 function textPreview(html) {
-  const text = html
-    .replace(/<[^>]*>/g, " ")
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = html.replace(/<[^>]*>/g, " ");
+
+  const text = textarea.value
+    .replace(/\u00a0/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
   return text.length > 170 ? `${text.slice(0, 167)}...` : text;
 }
 
-function formatDate(value) {
+function parseDate(value) {
   if (!value) {
-    return "";
+    return null;
   }
 
   const date = new Date(value.replace(" ", "T"));
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function latestNewsFirst(left, right) {
+  const leftDate = parseDate(left.created_at)?.getTime() ?? 0;
+  const rightDate = parseDate(right.created_at)?.getTime() ?? 0;
+
+  if (leftDate !== rightDate) {
+    return rightDate - leftDate;
+  }
+
+  return Number(right.id || 0) - Number(left.id || 0);
+}
+
+function formatDate(value) {
+  const date = parseDate(value);
+
+  if (!date) {
+    return value || "";
   }
 
   return new Intl.DateTimeFormat("de-DE", {
@@ -38,7 +60,11 @@ export default function NewsOverview() {
       .then((response) => (response.ok ? response.json() : { posts: [] }))
       .then((data) => {
         if (isMounted) {
-          setPosts(Array.isArray(data.posts) ? data.posts.slice(0, 3) : []);
+          const nextPosts = Array.isArray(data.posts)
+            ? [...data.posts].sort(latestNewsFirst).slice(0, NEWS_PREVIEW_LIMIT)
+            : [];
+
+          setPosts(nextPosts);
         }
       })
       .catch(() => {
@@ -74,12 +100,14 @@ export default function NewsOverview() {
             >
               {post.image_path && (
                 <div className="p-4 pb-0">
-                  <img
-                    className="h-48 w-full rounded-md object-contain"
-                    src={post.image_path}
-                    alt=""
-                    loading="lazy"
-                  />
+                  <div className="aspect-[16/9] overflow-hidden rounded-md bg-slate-100">
+                    <img
+                      className="h-full w-full object-cover"
+                      src={post.image_path}
+                      alt=""
+                      loading="lazy"
+                    />
+                  </div>
                 </div>
               )}
               <div className="flex flex-1 flex-col p-6">

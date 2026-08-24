@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",
+    "cropperjs": "1.6.2",
+    "lucide-react": "^1.33.0",
+    "quill": "2.0.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.15.0",

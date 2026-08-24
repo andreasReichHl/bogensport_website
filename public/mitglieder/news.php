@@ -8,7 +8,17 @@ require_once MEMBER_AREA_PRIVATE_PATH . '/view.php';
 $user = member_area_require_module('news');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_post') {
-    member_area_news_delete_post((int)($_POST['post_id'] ?? 0), $user);
+    if (($_POST['confirm_delete'] ?? '') !== '1') {
+        member_area_set_flash('Der Beitrag wurde nicht gelöscht.', 'error');
+        header('Location: /mitglieder/news.php');
+        exit;
+    }
+
+    $wasDeleted = member_area_news_delete_post((int)($_POST['post_id'] ?? 0), $user);
+    member_area_set_flash(
+        $wasDeleted ? 'Beitrag und Bilder wurden gelöscht.' : 'Der Beitrag konnte nicht gelöscht werden.',
+        $wasDeleted ? 'success' : 'error'
+    );
 
     header('Location: /mitglieder/news.php');
     exit;
@@ -138,14 +148,15 @@ member_area_page_start('News');
 
 <div id="delete_post_modal" class="modal-backdrop" hidden>
   <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="delete_post_title" aria-describedby="delete_post_description">
-    <h2 id="delete_post_title">Beitrag löschen?</h2>
-    <p id="delete_post_description">Soll dieser Beitrag wirklich gelöscht werden?</p>
+    <h2 id="delete_post_title">Beitrag unwiderruflich löschen?</h2>
+    <p id="delete_post_description">Soll dieser Beitrag wirklich unwiderruflich gelöscht werden? Der Beitrag und alle zugehörigen Bilder werden dauerhaft entfernt.</p>
     <form method="post" action="/mitglieder/news.php">
       <input type="hidden" name="action" value="delete_post">
+      <input type="hidden" name="confirm_delete" value="1">
       <input type="hidden" id="delete_post_id" name="post_id" value="">
       <div class="modal-actions">
-        <button type="submit" class="danger-button">Ja</button>
-        <button type="button" id="cancel_delete_post" class="button secondary">Nein</button>
+        <button type="submit" class="danger-button">Unwiderruflich löschen</button>
+        <button type="button" id="cancel_delete_post" class="button secondary">Abbrechen</button>
       </div>
     </form>
   </div>
@@ -225,7 +236,7 @@ member_area_page_start('News');
     button.addEventListener("click", () => {
       lastFocusedElement = button;
       deletePostId.value = button.dataset.postId;
-      deleteDescription.textContent = `Soll der Beitrag "${button.dataset.title}" wirklich gelöscht werden?`;
+      deleteDescription.textContent = `Soll der Beitrag "${button.dataset.title}" wirklich unwiderruflich gelöscht werden? Der Beitrag und alle zugehörigen Bilder werden dauerhaft entfernt.`;
       deleteModal.hidden = false;
       cancelDeletePost.focus();
     });

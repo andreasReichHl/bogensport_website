@@ -4,23 +4,44 @@ require_once __DIR__ . '/bootstrap.php';
 require_once MEMBER_AREA_PRIVATE_PATH . '/auth.php';
 require_once MEMBER_AREA_PRIVATE_PATH . '/view.php';
 
-if (member_area_current_user()) {
-    header('Location: /mitglieder/dashboard.php');
-    exit;
-}
-
 $error = '';
+$databaseUnavailable = false;
+
+try {
+    if (member_area_current_user()) {
+        header('Location: /mitglieder/dashboard.php');
+        exit;
+    }
+} catch (Throwable $errorObject) {
+    if (!member_area_is_database_exception($errorObject)) {
+        throw $errorObject;
+    }
+
+    http_response_code(503);
+    $error = $errorObject->getMessage();
+    $databaseUnavailable = true;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $identifier = $_POST['identifier'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    if (member_area_login($identifier, $password)) {
-        header('Location: /mitglieder/dashboard.php');
-        exit;
-    }
+    try {
+        if (member_area_login($identifier, $password)) {
+            header('Location: /mitglieder/dashboard.php');
+            exit;
+        }
 
-    $error = 'Loginname oder Passwort ist ungültig.';
+        $error = 'Loginname oder Passwort ist ungültig.';
+    } catch (Throwable $errorObject) {
+        if (!member_area_is_database_exception($errorObject)) {
+            throw $errorObject;
+        }
+
+        http_response_code(503);
+        $error = $errorObject->getMessage();
+        $databaseUnavailable = true;
+    }
 }
 
 member_area_page_start('Login');
@@ -29,6 +50,14 @@ member_area_page_start('Login');
   <h1>Mitgliederbereich</h1>
   <?php if ($error): ?>
     <p class="error"><?= member_area_escape($error) ?></p>
+    <?php if ($databaseUnavailable): ?>
+      <p class="form-actions">
+        <a class="button secondary" href="/mitglieder/login.php">
+          <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+          Aktualisieren
+        </a>
+      </p>
+    <?php endif; ?>
   <?php endif; ?>
   <form method="post" action="/mitglieder/login.php">
     <label>

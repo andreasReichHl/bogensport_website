@@ -11,6 +11,13 @@ $posts = array_map(
         'title' => $post['title'],
         'body_html' => $post['body_html'],
         'image_path' => $post['image_path'],
+        'images' => array_map(
+            static fn(array $image): array => [
+                'id' => $image['id'] === null ? null : (int)$image['id'],
+                'image_path' => $image['image_path'],
+            ],
+            $post['images'] ?? []
+        ),
         'visible_until' => $post['visible_until'],
         'created_at' => $post['created_at'],
         'author_username' => $post['author_username'],

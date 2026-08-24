@@ -39,3 +39,15 @@ CREATE TABLE IF NOT EXISTS news_posts (
     FOREIGN KEY (author_id) REFERENCES users (id)
     ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS news_post_images (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  post_id INT UNSIGNED NOT NULL,
+  image_path VARCHAR(255) NOT NULL,
+  sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_news_post_images_post (post_id, sort_order, id),
+  CONSTRAINT fk_news_post_images_post
+    FOREIGN KEY (post_id) REFERENCES news_posts (id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
