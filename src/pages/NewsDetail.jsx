@@ -1,43 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import FadeInImage from "../components/FadeInImage";
+import { formatDate, parseDate, textPreview, useNewsFeed } from "../utils/news";
 
 const newsDayFormatter = new Intl.DateTimeFormat("de-DE", { day: "2-digit" });
 const newsMonthFormatter = new Intl.DateTimeFormat("de-DE", { month: "short" });
-
-function parseDate(value) {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value.replace(" ", "T"));
-
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function formatDate(value) {
-  const date = parseDate(value);
-
-  if (!date) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-}
-
-function textPreview(html) {
-  const textarea = document.createElement("textarea");
-  textarea.innerHTML = html.replace(/<[^>]*>/g, " ");
-
-  return textarea.value
-    .replace(/\u00a0/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+const DESKTOP_NEWS_LIMIT = 3;
 
 function postImages(post) {
   const images = Array.isArray(post.images)
@@ -57,6 +26,7 @@ function NewsGallery({ images, title }) {
   const [activeImage, setActiveImage] = useState({ imageKey: "", index: 0 });
   const swipeStartX = useRef(null);
   const suppressEdgeClick = useRef(false);
+  const suppressEdgeClickTimeout = useRef(null);
   const imageKey = images.join("|");
 
   if (images.length === 0) {
@@ -89,8 +59,14 @@ function NewsGallery({ images, title }) {
     }
 
     suppressEdgeClick.current = true;
-    window.setTimeout(() => {
+
+    if (suppressEdgeClickTimeout.current !== null) {
+      window.clearTimeout(suppressEdgeClickTimeout.current);
+    }
+
+    suppressEdgeClickTimeout.current = window.setTimeout(() => {
       suppressEdgeClick.current = false;
+      suppressEdgeClickTimeout.current = null;
     }, 120);
 
     if (distance > 0) {
@@ -143,7 +119,8 @@ function NewsGallery({ images, title }) {
         >
           {images.map((imagePath, index) => (
             <div key={`${imagePath}-${index}`} className="flex h-full min-w-full">
-              <img
+              <FadeInImage
+                wrapperClassName="h-full w-full"
                 className="block h-full w-full object-cover"
                 src={imagePath}
                 alt=""
@@ -216,37 +193,11 @@ function NewsGallery({ images, title }) {
 
 export default function NewsDetail() {
   const { id } = useParams();
-  const [post, setPost] = useState(null);
-  const [posts, setPosts] = useState([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const navigate = useNavigate();
+  const { posts, isLoaded } = useNewsFeed();
+  const [showAllDesktopNews, setShowAllDesktopNews] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    fetch("/news-feed.php")
-      .then((response) => (response.ok ? response.json() : { posts: [] }))
-      .then((data) => {
-        if (!isMounted) {
-          return;
-        }
-
-        const posts = Array.isArray(data.posts) ? data.posts : [];
-        setPosts(posts);
-        setPost(posts.find((item) => String(item.id) === String(id)) || null);
-        setIsLoaded(true);
-      })
-      .catch(() => {
-        if (isMounted) {
-          setPosts([]);
-          setPost(null);
-          setIsLoaded(true);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
+  const post = posts.find((item) => String(item.id) === String(id)) || null;
 
   if (!isLoaded) {
     return (
@@ -268,14 +219,22 @@ export default function NewsDetail() {
   }
 
   const images = postImages(post);
+  const previewPosts = posts.slice(0, DESKTOP_NEWS_LIMIT);
+  const currentPostInPreview = previewPosts.some((item) => String(item.id) === String(id));
+  const desktopPosts = showAllDesktopNews
+    ? posts
+    : currentPostInPreview
+      ? previewPosts
+      : [...previewPosts.slice(0, DESKTOP_NEWS_LIMIT - 1), post];
+  const hasMoreDesktopPosts = posts.length > DESKTOP_NEWS_LIMIT;
 
   return (
     <article className="bg-white">
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 sm:px-8 sm:py-12 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-12 lg:px-12">
-        <aside className="min-w-0 lg:sticky lg:top-8 lg:self-start">
+        <aside className="hidden min-w-0 lg:sticky lg:top-8 lg:block lg:self-start">
           <h2 className="font-heading text-sm font-bold uppercase tracking-wide text-blue-700">News</h2>
           <nav className="mt-4 grid gap-3 sm:grid-cols-2 lg:mt-5 lg:grid-cols-1" aria-label="Verfügbare News-Beiträge">
-            {posts.map((item) => {
+            {desktopPosts.map((item) => {
               const isCurrent = String(item.id) === String(id);
               const itemDate = parseDate(item.created_at);
 
@@ -306,6 +265,17 @@ export default function NewsDetail() {
               );
             })}
           </nav>
+          {hasMoreDesktopPosts && (
+            <button
+              type="button"
+              className="mt-4 inline-flex font-heading text-sm font-bold text-blue-700 transition hover:text-blue-900"
+              onClick={() => {
+                setShowAllDesktopNews((isShown) => !isShown);
+              }}
+            >
+              {showAllDesktopNews ? "Weniger News anzeigen" : "Alle News anzeigen"}
+            </button>
+          )}
         </aside>
 
         <div className="min-w-0 max-w-4xl lg:pl-2">
@@ -325,6 +295,29 @@ export default function NewsDetail() {
             className="news-content mt-7 min-w-0 break-words sm:mt-8"
             dangerouslySetInnerHTML={{ __html: post.body_html }}
           />
+          <div className="mt-8 lg:hidden">
+            <label
+              className="font-heading text-sm font-bold uppercase tracking-wide text-blue-700"
+              htmlFor="mobile-news-select"
+            >
+              Weitere News
+            </label>
+            <select
+              id="mobile-news-select"
+              className="mt-2 block w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-heading text-base font-bold text-[#002f5f] shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+              value={String(id)}
+              onChange={(event) => {
+                navigate(`/news/${event.target.value}`);
+              }}
+            >
+              {posts.map((item) => (
+                <option key={item.id} value={String(item.id)}>
+                  {item.created_at ? `${formatDate(item.created_at)} - ` : ""}
+                  {item.title}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </article>

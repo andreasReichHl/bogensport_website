@@ -1,18 +1,11 @@
+// VITE_CALENDAR_ICS_URL is an escape hatch for pointing at an ICS feed directly instead of
+// going through the same-origin calendar-proxy.php. If it's set to a cross-origin URL, that
+// URL must itself allow CORS (or be routed through a same-origin proxy) - we deliberately
+// don't fall back to free public CORS-proxy services here (no SLA/rate-limit guarantees, and
+// routing calendar data through an unrelated third party isn't something to do silently).
 const calendarUrl =
   import.meta.env.VITE_CALENDAR_ICS_URL ||
   "/calendar-proxy.php";
-
-function getCalendarFetchUrls() {
-  if (!/^https?:\/\//.test(calendarUrl)) {
-    return [calendarUrl];
-  }
-
-  return [
-    calendarUrl,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(calendarUrl)}`,
-    `https://api.allorigins.win/get?url=${encodeURIComponent(calendarUrl)}`,
-  ];
-}
 
 function unfoldIcsLines(icsText) {
   return icsText.replace(/\r?\n[ \t]/g, "").split(/\r?\n/);
@@ -138,54 +131,14 @@ function parseIcsEvents(icsText) {
   return events;
 }
 
-function decodeBase64DataUri(dataUri) {
-  const base64Marker = ";base64,";
-  const base64Index = dataUri.indexOf(base64Marker);
-
-  if (base64Index === -1) {
-    return decodeURIComponent(dataUri.split(",", 2)[1] || "");
-  }
-
-  const binaryString = atob(dataUri.slice(base64Index + base64Marker.length));
-  const bytes = Uint8Array.from(binaryString, (character) => character.charCodeAt(0));
-
-  return new TextDecoder("utf-8").decode(bytes);
-}
-
 async function fetchCalendarText() {
-  let lastError = null;
+  const response = await fetch(calendarUrl);
 
-  for (const url of getCalendarFetchUrls()) {
-    try {
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Calendar request failed with status ${response.status}`);
-      }
-
-      const contentType = response.headers.get("content-type") || "";
-
-      if (contentType.includes("application/json")) {
-        const data = await response.json();
-
-        if (typeof data.contents !== "string") {
-          throw new Error("Calendar proxy returned invalid data");
-        }
-
-        if (data.contents.startsWith("data:")) {
-          return decodeBase64DataUri(data.contents);
-        }
-
-        return data.contents;
-      }
-
-      return response.text();
-    } catch (error) {
-      lastError = error;
-    }
+  if (!response.ok) {
+    throw new Error(`Calendar request failed with status ${response.status}`);
   }
 
-  throw lastError || new Error("Calendar request failed");
+  return response.text();
 }
 
 export function formatEventDate(date) {

@@ -2,7 +2,27 @@
 
 require_once __DIR__ . '/db.php';
 
-const MEMBER_AREA_NEWS_ALLOWED_TAGS = '<p><br><strong><b><em><i><u><s><strike><ul><ol><li><h4><h5><h6><blockquote><a><span>';
+const MEMBER_AREA_NEWS_ALLOWED_TAGS = [
+    'p' => [],
+    'br' => [],
+    'strong' => [],
+    'b' => [],
+    'em' => [],
+    'i' => [],
+    'u' => [],
+    's' => [],
+    'strike' => [],
+    'ul' => [],
+    'ol' => [],
+    'li' => [],
+    'h4' => [],
+    'h5' => [],
+    'h6' => [],
+    'blockquote' => [],
+    'a' => ['href'],
+    'span' => ['class'],
+];
+const MEMBER_AREA_NEWS_ALLOWED_URL_SCHEMES = ['http', 'https', 'mailto', 'tel'];
 const MEMBER_AREA_NEWS_MAX_IMAGES = 8;
 
 function member_area_news_retention_days(): int
@@ -130,38 +150,127 @@ function member_area_news_valid_image_path(?string $imagePath): ?string
     return $imagePath;
 }
 
-function member_area_news_sanitize_html(string $html): string
+function member_area_news_sanitize_dom_node(DOMNode $node): void
 {
-    $html = strip_tags($html, MEMBER_AREA_NEWS_ALLOWED_TAGS);
-    $html = preg_replace('/\s(?:on[a-z]+|style)\s*=\s*(".*?"|\'.*?\'|[^\s>]+)/i', '', $html) ?? '';
-    $html = preg_replace('/href\s*=\s*("|\')\s*javascript:[^"\']*("|\')/i', 'href="#"', $html) ?? '';
-    $html = preg_replace('/<a\s+/i', '<a rel="noopener noreferrer" target="_blank" ', $html) ?? '';
-    $html = preg_replace_callback('/<span\b([^>]*)>/i', static function (array $match): string {
-        if (preg_match('/\bclass\s*=\s*("|\')([^"\']*)\1/i', $match[1], $classMatch)) {
+    foreach (iterator_to_array($node->childNodes) as $child) {
+        if ($child instanceof DOMComment) {
+            $node->removeChild($child);
+            continue;
+        }
+
+        if ($child instanceof DOMText) {
+            continue;
+        }
+
+        if (!$child instanceof DOMElement) {
+            $node->removeChild($child);
+            continue;
+        }
+
+        $tagName = strtolower($child->tagName);
+
+        if (!array_key_exists($tagName, MEMBER_AREA_NEWS_ALLOWED_TAGS)) {
+            // Unwrap disallowed tags (e.g. <script>, <img>, <div>) but keep sanitizing
+            // and preserve their text/inline content instead of dropping it outright.
+            member_area_news_sanitize_dom_node($child);
+
+            while ($child->firstChild) {
+                $node->insertBefore($child->firstChild, $child);
+            }
+
+            $node->removeChild($child);
+            continue;
+        }
+
+        $allowedAttributes = MEMBER_AREA_NEWS_ALLOWED_TAGS[$tagName];
+
+        foreach (iterator_to_array($child->attributes ?? []) as $attribute) {
+            if (!in_array(strtolower($attribute->name), $allowedAttributes, true)) {
+                $child->removeAttribute($attribute->name);
+            }
+        }
+
+        if ($tagName === 'a') {
+            // Mirror the browser's URL parsing (which strips tabs/newlines from anywhere
+            // in the URL, including inside the scheme) before validating the scheme, so a
+            // payload like "java\tscript:" can't sneak a disallowed scheme past this check.
+            $href = preg_replace('/[\t\r\n]/', '', trim($child->getAttribute('href'))) ?? '';
+            $scheme = null;
+
+            if (preg_match('/^([a-z][a-z0-9+.\-]*):/i', $href, $schemeMatch)) {
+                $scheme = strtolower($schemeMatch[1]);
+            }
+
+            $isRelativeOrAnchor = $href !== '' && $scheme === null;
+
+            if ($href !== '' && ($isRelativeOrAnchor || in_array($scheme, MEMBER_AREA_NEWS_ALLOWED_URL_SCHEMES, true))) {
+                $child->setAttribute('href', $href);
+            } else {
+                $child->setAttribute('href', '#');
+            }
+
+            $child->setAttribute('rel', 'noopener noreferrer');
+            $child->setAttribute('target', '_blank');
+        }
+
+        if ($tagName === 'span') {
             $classes = array_intersect(
-                preg_split('/\s+/', trim($classMatch[2])) ?: [],
+                preg_split('/\s+/', trim((string)$child->getAttribute('class'))) ?: [],
                 ['news-size-small']
             );
 
             if ($classes) {
-                return '<span class="' . htmlspecialchars(implode(' ', $classes), ENT_QUOTES, 'UTF-8') . '">';
+                $child->setAttribute('class', implode(' ', $classes));
+            } else {
+                $child->removeAttribute('class');
             }
         }
 
-        return '<span>';
-    }, $html) ?? '';
-    $html = preg_replace(
-        '/<span class="news-size-small">\s*<span class="news-size-small">([\s\S]*?)<\/span>\s*<\/span>/i',
-        '<span class="news-size-small">$1</span>',
-        $html
-    ) ?? '';
-
-    return trim($html);
+        member_area_news_sanitize_dom_node($child);
+    }
 }
 
-function member_area_news_upload_image(array $file): ?string
+function member_area_news_sanitize_html(string $html): string
 {
-    return member_area_news_store_uploaded_image($file);
+    $html = trim($html);
+
+    if ($html === '') {
+        return '';
+    }
+
+    $document = new DOMDocument();
+    $previousErrorSetting = libxml_use_internal_errors(true);
+    $loaded = $document->loadHTML(
+        '<?xml encoding="utf-8" ?><div id="member-area-news-root">' . $html . '</div>',
+        LIBXML_NOERROR | LIBXML_NOWARNING
+    );
+    libxml_use_internal_errors($previousErrorSetting);
+
+    if (!$loaded) {
+        return '';
+    }
+
+    $root = $document->getElementById('member-area-news-root');
+
+    if (!$root) {
+        return '';
+    }
+
+    member_area_news_sanitize_dom_node($root);
+
+    $innerHtml = '';
+
+    foreach (iterator_to_array($root->childNodes) as $child) {
+        $innerHtml .= $document->saveHTML($child);
+    }
+
+    $innerHtml = preg_replace(
+        '/<span class="news-size-small">\s*<span class="news-size-small">([\s\S]*?)<\/span>\s*<\/span>/i',
+        '<span class="news-size-small">$1</span>',
+        $innerHtml
+    ) ?? $innerHtml;
+
+    return trim($innerHtml);
 }
 
 function member_area_news_store_uploaded_image(array $file): ?string
@@ -551,6 +660,13 @@ function member_area_news_prepare_post(array $post): array
     $post['images'] = $images;
     $post['image_path'] = $images[0]['image_path'] ?? null;
 
+    if (array_key_exists('body_html', $post)) {
+        // Re-sanitize on every read, not just on save, so posts already stored
+        // before a sanitizer hardening (or written by any other path than
+        // news-edit.php) can never reach an HTML sink unsanitized.
+        $post['body_html'] = member_area_news_sanitize_html((string)($post['body_html'] ?? ''));
+    }
+
     return $post;
 }
 
@@ -601,7 +717,14 @@ function member_area_news_list(string $target, bool $includeExpired = false): ar
 {
     member_area_news_cleanup_images();
 
-    $visibilityColumn = $target === 'public' ? 'show_public' : 'show_members';
+    // Explicit allow-list rather than a ternary default: a future caller passing an
+    // unexpected $target fails loudly instead of silently falling back to "members" and
+    // the interpolated column name can never become anything other than these two literals.
+    $visibilityColumn = match ($target) {
+        'public' => 'show_public',
+        'members' => 'show_members',
+        default => throw new InvalidArgumentException("Unknown news list target: {$target}"),
+    };
     $dateCondition = $includeExpired ? '1 = 1' : 'visible_until >= CURRENT_DATE';
 
     $posts = member_area_db()->query(

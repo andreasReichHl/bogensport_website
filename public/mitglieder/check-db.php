@@ -17,20 +17,15 @@ if ($tokenHash === '' || !hash_equals($tokenHash, hash('sha256', $token))) {
 }
 
 try {
-    $statement = member_area_db()->query('SELECT 1 AS connection_ok');
-    $result = $statement->fetch();
-
-    if ((int)($result['connection_ok'] ?? 0) !== 1) {
-        throw new RuntimeException('Unexpected database response');
-    }
-
-    $tableStatement = member_area_db()->query("SHOW TABLES LIKE 'users'");
-    $hasUsersTable = (bool)$tableStatement->fetch();
+    $health = member_area_db_health_check();
 
     echo "Database connection: OK\n";
-    echo 'Users table: ' . ($hasUsersTable ? 'OK' : 'MISSING') . "\n";
+    echo 'Users table: ' . ($health['users_table_ok'] ? 'OK' : 'MISSING') . "\n";
 } catch (Throwable $error) {
+    // Log the real error server-side only - this endpoint is reachable over HTTP (behind a
+    // token gate), so echoing driver/host details back in the response would hand an
+    // attacker who guesses or leaks the token a DB-error-message oracle.
+    error_log('check-db.php failed: ' . $error->getMessage());
     http_response_code(500);
     echo "Database connection: FAILED\n";
-    echo $error->getMessage() . "\n";
 }

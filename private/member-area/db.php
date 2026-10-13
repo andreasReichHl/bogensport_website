@@ -46,3 +46,20 @@ function member_area_db(): PDO
 
     return $pdo;
 }
+
+function member_area_db_health_check(): array
+{
+    $statement = member_area_db()->query('SELECT 1 AS connection_ok');
+    $result = $statement->fetch();
+
+    if ((int)($result['connection_ok'] ?? 0) !== 1) {
+        throw new RuntimeException('Unexpected database response');
+    }
+
+    $tableStatement = member_area_db()->query("SHOW TABLES LIKE 'users'");
+
+    return [
+        'connection_ok' => true,
+        'users_table_ok' => (bool)$tableStatement->fetch(),
+    ];
+}

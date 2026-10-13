@@ -28,7 +28,8 @@ if ($postId > 0) {
 }
 
 $title = $post['title'] ?? '';
-$bodyHtml = $post['body_html'] ?? '<p></p>';
+$bodyHtml = $post ? member_area_news_sanitize_html((string)($post['body_html'] ?? '')) : '<p></p>';
+$bodyHtml = $bodyHtml === '' ? '<p></p>' : $bodyHtml;
 $visibleUntil = $post['visible_until'] ?? date('Y-m-d', strtotime('+14 days'));
 $showPublic = (int)($post['show_public'] ?? 0) === 1;
 $imagePath = $post['image_path'] ?? null;
@@ -162,7 +163,7 @@ member_area_page_start($postId > 0 ? 'News bearbeiten' : 'News verfassen');
 
     <label>
       Titel
-      <input name="title" value="<?= member_area_escape($title) ?>" maxlength="190" required>
+      <input name="title" value="<?= member_area_escape($title) ?>" maxlength="190" required spellcheck="true" lang="de">
     </label>
 
     <div class="editor-field">
@@ -221,7 +222,7 @@ member_area_page_start($postId > 0 ? 'News bearbeiten' : 'News verfassen');
           </details>
         </span>
       </span>
-      <div id="rich_editor" class="rich-editor news-content"><?= $bodyHtml ?></div>
+      <div id="rich_editor" class="rich-editor news-content" spellcheck="true" lang="de"><?= $bodyHtml ?></div>
     </div>
 
     <label>

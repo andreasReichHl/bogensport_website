@@ -41,13 +41,11 @@ function member_area_config(): array
 
 function member_area_is_local_environment(): bool
 {
-    $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
-
-    if ($host === '') {
-        return PHP_SAPI === 'cli';
-    }
-
-    $host = strtolower(explode(':', $host)[0]);
-
-    return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+    // Deliberately independent of any request data (Host header, SERVER_NAME, etc.):
+    // those are attacker-controllable on many hosting setups, and using them here would
+    // let a spoofed request switch a production deployment onto config.local.example.php,
+    // whose JWT secret is committed to version control. PHP_SAPI is set by how the process
+    // was started (the CLI, or `php -S` for local/dev serving) and cannot be influenced by
+    // an incoming HTTP request.
+    return in_array(PHP_SAPI, ['cli', 'cli-server'], true);
 }

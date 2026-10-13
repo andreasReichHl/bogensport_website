@@ -1,29 +1,9 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import FadeInImage from "./FadeInImage";
+import { formatDate, parseDate, textPreview, useNewsFeed } from "../utils/news";
 
 const NEWS_PREVIEW_LIMIT = 3;
-
-function textPreview(html) {
-  const textarea = document.createElement("textarea");
-  textarea.innerHTML = html.replace(/<[^>]*>/g, " ");
-
-  const text = textarea.value
-    .replace(/\u00a0/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return text.length > 170 ? `${text.slice(0, 167)}...` : text;
-}
-
-function parseDate(value) {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value.replace(" ", "T"));
-
-  return Number.isNaN(date.getTime()) ? null : date;
-}
+const PREVIEW_TEXT_MAX_LENGTH = 170;
 
 function latestNewsFirst(left, right) {
   const leftDate = parseDate(left.created_at)?.getTime() ?? 0;
@@ -36,47 +16,9 @@ function latestNewsFirst(left, right) {
   return Number(right.id || 0) - Number(left.id || 0);
 }
 
-function formatDate(value) {
-  const date = parseDate(value);
-
-  if (!date) {
-    return value || "";
-  }
-
-  return new Intl.DateTimeFormat("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-}
-
 export default function NewsOverview() {
-  const [posts, setPosts] = useState([]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    fetch("/news-feed.php")
-      .then((response) => (response.ok ? response.json() : { posts: [] }))
-      .then((data) => {
-        if (isMounted) {
-          const nextPosts = Array.isArray(data.posts)
-            ? [...data.posts].sort(latestNewsFirst).slice(0, NEWS_PREVIEW_LIMIT)
-            : [];
-
-          setPosts(nextPosts);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setPosts([]);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { posts: allPosts } = useNewsFeed();
+  const posts = [...allPosts].sort(latestNewsFirst).slice(0, NEWS_PREVIEW_LIMIT);
 
   if (posts.length === 0) {
     return null;
@@ -100,19 +42,18 @@ export default function NewsOverview() {
             >
               {post.image_path && (
                 <div className="p-4 pb-0">
-                  <div className="aspect-[16/9] overflow-hidden rounded-md bg-slate-100">
-                    <img
-                      className="h-full w-full object-cover"
-                      src={post.image_path}
-                      alt=""
-                      loading="lazy"
-                    />
-                  </div>
+                  <FadeInImage
+                    wrapperClassName="aspect-[16/9] rounded-md bg-slate-100"
+                    className="h-full w-full object-cover"
+                    src={post.image_path}
+                    alt=""
+                    loading="lazy"
+                  />
                 </div>
               )}
               <div className="flex flex-1 flex-col p-6">
                 <h3 className="font-heading text-xl font-bold text-[#002f5f]">{post.title}</h3>
-                <p className="mt-4 text-base leading-relaxed text-slate-700">{textPreview(post.body_html)}</p>
+                <p className="mt-4 text-base leading-relaxed text-slate-700">{textPreview(post.body_html, PREVIEW_TEXT_MAX_LENGTH)}</p>
                 {post.created_at && (
                   <p className="mt-auto pt-6 text-xs font-semibold text-slate-500">
                     {formatDate(post.created_at)}
