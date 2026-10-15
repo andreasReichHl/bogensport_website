@@ -20,6 +20,7 @@ function parseEvent(rawEvent) {
     location: rawEvent.location || "",
     description: rawEvent.description || "",
     attachmentUrl: rawEvent.attachmentUrl || "",
+    icsUrl: rawEvent.icsUrl || "",
   };
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { CalendarPlus, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { fetchCalendarEvents, fetchUpcomingEvents } from "../utils/calendar.js";
@@ -194,15 +194,28 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
                   </div>
                 </div>
               )}
-              {event.attachmentUrl && (
-                <a
-                  href={event.attachmentUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex text-sm font-bold text-blue-700 transition hover:text-blue-900 hover:underline"
-                >
-                  Ausschreibung
-                </a>
+              {(event.attachmentUrl || event.icsUrl) && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+                  {event.attachmentUrl && (
+                    <a
+                      href={event.attachmentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex text-sm font-bold text-blue-700 transition hover:text-blue-900 hover:underline"
+                    >
+                      Ausschreibung
+                    </a>
+                  )}
+                  {event.icsUrl && (
+                    <a
+                      href={event.icsUrl}
+                      className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-700 transition hover:text-blue-900 hover:underline"
+                    >
+                      <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+                      In Kalender speichern
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           </article>

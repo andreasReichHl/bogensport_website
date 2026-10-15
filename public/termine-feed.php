@@ -74,6 +74,7 @@ try {
     $result = array_map(
         static function (array $event) use ($attachmentFieldId): array {
             $attachmentAssignmentId = easyverein_termine_find_attachment_assignment_id($event, $attachmentFieldId);
+            $icsUrl = (string)($event['ics_link'] ?? '');
 
             return [
                 'id' => (int)$event['id'],
@@ -86,6 +87,10 @@ try {
                 'attachmentUrl' => $attachmentAssignmentId !== null
                     ? '/termine-attachment.php?assignment=' . $attachmentAssignmentId
                     : null,
+                // Unlike the "Anhang" attachment, easyVerein's own per-event .ics export link
+                // is publicly reachable without authentication (verified live), so it's handed
+                // straight to the browser instead of being proxied through our own server.
+                'icsUrl' => str_starts_with($icsUrl, 'https://easyverein.com/') ? $icsUrl : null,
             ];
         },
         $events
