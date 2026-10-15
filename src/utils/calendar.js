@@ -20,7 +20,10 @@ function parseEvent(rawEvent) {
     location: rawEvent.location || "",
     description: rawEvent.description || "",
     attachmentUrl: rawEvent.attachmentUrl || "",
-    icsUrl: rawEvent.icsUrl || "",
+    // webcal:// (rather than https://) tells the OS/browser this is a calendar subscription,
+    // so it hands the click to the calendar app directly ("Termin hinzufügen?") instead of
+    // downloading the .ics file first.
+    icsUrl: rawEvent.icsUrl ? rawEvent.icsUrl.replace(/^https:\/\//, "webcal://") : "",
   };
 }
 
