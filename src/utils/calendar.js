@@ -20,10 +20,12 @@ function parseEvent(rawEvent) {
     location: rawEvent.location || "",
     description: rawEvent.description || "",
     attachmentUrl: rawEvent.attachmentUrl || "",
-    // webcal:// (rather than https://) tells the OS/browser this is a calendar subscription,
-    // so it hands the click to the calendar app directly ("Termin hinzufügen?") instead of
-    // downloading the .ics file first.
-    icsUrl: rawEvent.icsUrl ? rawEvent.icsUrl.replace(/^https:\/\//, "webcal://") : "",
+    // Deliberately a plain https:// link, not webcal://: webcal: signals an ongoing calendar
+    // *subscription* (a live-updating feed), which is the wrong semantics for a one-off single
+    // event - and since every event has its own ics_link, it would leave one permanent
+    // subscribed calendar per event a visitor ever added. A plain https:// link to a
+    // single-event .ics is a one-time "add this event?" import instead.
+    icsUrl: rawEvent.icsUrl || "",
   };
 }
 
