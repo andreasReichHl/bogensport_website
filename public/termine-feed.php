@@ -13,6 +13,13 @@ require_once MEMBER_AREA_PRIVATE_PATH . '/news.php';
 
 const EASYVEREIN_TERMINE_CALENDAR_NAME = 'Turniere';
 const EASYVEREIN_TERMINE_ATTACHMENT_FIELD_NAME = 'Anhang';
+// Hardcoded, not read from the API: the calendar resource's own "calendar_export_url" field
+// (GET /calendar/{id}) returns a stale/incorrect token that 404s - verified live on
+// 2026-10-15. This is the real, working subscription URL for the "Turniere" calendar, copied
+// from the easyVerein UI (Kalender -> "In externer Anwendung abonnieren"). If the Turniere
+// calendar is ever recreated in easyVerein, this needs to be updated from there again.
+const EASYVEREIN_TERMINE_SUBSCRIBE_URL =
+    'webcal://easyverein.com/event/subscription/BOBS/07aab67a-e691-40fe-8c69-588ecbb29a45/calendar.ics?id=590779575';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -59,7 +66,7 @@ try {
     $calendar = $calendars[0] ?? null;
 
     if ($calendar === null) {
-        echo json_encode(['events' => []], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        echo json_encode(['events' => [], 'subscribeUrl' => null], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
 
@@ -96,7 +103,10 @@ try {
         $events
     );
 
-    echo json_encode(['events' => $result], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    echo json_encode(
+        ['events' => $result, 'subscribeUrl' => EASYVEREIN_TERMINE_SUBSCRIBE_URL],
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+    );
 } catch (Throwable $error) {
     if (!easyverein_termine_is_expected_failure($error)) {
         throw $error;
@@ -104,5 +114,5 @@ try {
 
     error_log('termine-feed.php failed: ' . $error->getMessage());
     http_response_code(503);
-    echo json_encode(['events' => []], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    echo json_encode(['events' => [], 'subscribeUrl' => null], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
