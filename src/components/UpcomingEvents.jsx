@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { fetchCalendarEvents, fetchUpcomingEvents } from "../utils/calendar.js";
@@ -33,6 +34,21 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
   const [events, setEvents] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [status, setStatus] = useState("loading");
+  const [expandedEventIds, setExpandedEventIds] = useState(() => new Set());
+
+  function toggleEventDescription(eventKey) {
+    setExpandedEventIds((previous) => {
+      const next = new Set(previous);
+
+      if (next.has(eventKey)) {
+        next.delete(eventKey);
+      } else {
+        next.add(eventKey);
+      }
+
+      return next;
+    });
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -119,6 +135,8 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
       {visibleEvents.map((event) => {
         const pastEvent = isPastEvent(event);
         const eventKey = event.id || `${event.title}-${event.startDate.toISOString()}`;
+        const isDescriptionExpanded = expandedEventIds.has(eventKey);
+        const descriptionPanelId = `event-description-${eventKey}`;
 
         return (
           <article
@@ -131,9 +149,27 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
               <div className="text-3xl font-bold">{eventDayFormatter.format(event.startDate)}</div>
               <div className="text-xs font-bold uppercase">{eventMonthFormatter.format(event.startDate)}</div>
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-heading text-base font-bold text-slate-900">{event.title}</h3>
+                {event.description ? (
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 text-left font-heading text-base font-bold text-slate-900 transition hover:text-blue-700"
+                    aria-expanded={isDescriptionExpanded}
+                    aria-controls={descriptionPanelId}
+                    onClick={() => toggleEventDescription(eventKey)}
+                  >
+                    {event.title}
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                        isDescriptionExpanded ? "rotate-180" : ""
+                      }`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                ) : (
+                  <h3 className="font-heading text-base font-bold text-slate-900">{event.title}</h3>
+                )}
                 {pastEvent && (
                   <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-600">
                     Vergangen
@@ -145,9 +181,18 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
               )}
               {event.description && (
                 <div
-                  className="mt-2 text-sm leading-relaxed text-slate-600"
-                  dangerouslySetInnerHTML={{ __html: event.description }}
-                />
+                  id={descriptionPanelId}
+                  className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+                    isDescriptionExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div
+                      className="mt-2 text-sm leading-relaxed text-slate-600"
+                      dangerouslySetInnerHTML={{ __html: event.description }}
+                    />
+                  </div>
+                </div>
               )}
               {event.attachmentUrl && (
                 <a
