@@ -23,12 +23,16 @@ function sortEventsForOverview(events) {
   return [...upcomingEvents, ...pastEvents];
 }
 
+function closestYear(years, targetYear) {
+  return years.reduce((closest, year) => (
+    Math.abs(year - targetYear) < Math.abs(closest - targetYear) ? year : closest
+  ), years[0]);
+}
+
 export default function UpcomingEvents({ includePast = false, limit, showAllLink = false }) {
   const [events, setEvents] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [status, setStatus] = useState("loading");
-  const currentYear = new Date().getFullYear();
-  const yearOptions = [currentYear, currentYear + 1];
 
   useEffect(() => {
     let isMounted = true;
@@ -40,8 +44,19 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
           : await fetchUpcomingEvents();
 
         if (isMounted) {
-          setEvents(limit ? calendarEvents.slice(0, limit) : calendarEvents);
+          const limitedEvents = limit ? calendarEvents.slice(0, limit) : calendarEvents;
+          setEvents(limitedEvents);
           setStatus("success");
+
+          if (includePast && limitedEvents.length > 0) {
+            const availableYears = limitedEvents.map((event) => event.startDate.getFullYear());
+
+            setSelectedYear((currentSelection) => (
+              availableYears.includes(currentSelection)
+                ? currentSelection
+                : closestYear(availableYears, currentSelection)
+            ));
+          }
         }
       } catch {
         if (isMounted) {
@@ -68,7 +83,9 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
   const visibleEvents = includePast
     ? events.filter((event) => event.startDate.getFullYear() === selectedYear)
     : events;
-  const eventYears = new Set(events.map((event) => event.startDate.getFullYear()));
+  const yearOptions = [...new Set(events.map((event) => event.startDate.getFullYear()))].sort(
+    (firstYear, secondYear) => firstYear - secondYear
+  );
 
   if (visibleEvents.length === 0 && !includePast) {
     return <p className="mt-5 text-sm text-slate-600">Aktuell sind keine kommenden Termine eingetragen.</p>;
@@ -78,25 +95,20 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
     <div className="mt-5 space-y-5">
       {includePast && (
         <div className="flex flex-wrap gap-2">
-          {yearOptions.map((year) => {
-            const hasEvents = eventYears.has(year);
-
-            return (
-              <button
-                key={year}
-                type="button"
-                disabled={!hasEvents}
-                onClick={() => setSelectedYear(year)}
-                className={`h-10 rounded-md px-4 text-sm font-bold transition ${
-                  selectedYear === year
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
-                } disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:ring-slate-200 disabled:hover:bg-slate-100`}
-              >
-                {year}
-              </button>
-            );
-          })}
+          {yearOptions.map((year) => (
+            <button
+              key={year}
+              type="button"
+              onClick={() => setSelectedYear(year)}
+              className={`h-10 rounded-md px-4 text-sm font-bold transition ${
+                selectedYear === year
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              {year}
+            </button>
+          ))}
         </div>
       )}
 
@@ -132,11 +144,14 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{event.location}</p>
               )}
               {event.description && (
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">{event.description}</p>
+                <div
+                  className="mt-2 text-sm leading-relaxed text-slate-600"
+                  dangerouslySetInnerHTML={{ __html: event.description }}
+                />
               )}
-              {event.link && (
+              {event.attachmentUrl && (
                 <a
-                  href={event.link}
+                  href={event.attachmentUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-3 inline-flex text-sm font-bold text-blue-700 transition hover:text-blue-900 hover:underline"

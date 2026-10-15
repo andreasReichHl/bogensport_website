@@ -24,6 +24,5 @@ dist-ssr
 *.sw?
 
 .env.*
-.env.example
-.env.local
+!.env.example
 private/member-area/config.local.php

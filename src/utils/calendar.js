@@ -1,156 +1,26 @@
-// VITE_CALENDAR_ICS_URL is an escape hatch for pointing at an ICS feed directly instead of
-// going through the same-origin calendar-proxy.php. If it's set to a cross-origin URL, that
-// URL must itself allow CORS (or be routed through a same-origin proxy) - we deliberately
-// don't fall back to free public CORS-proxy services here (no SLA/rate-limit guarantees, and
-// routing calendar data through an unrelated third party isn't something to do silently).
-const calendarUrl =
-  import.meta.env.VITE_CALENDAR_ICS_URL ||
-  "/calendar-proxy.php";
-
-function unfoldIcsLines(icsText) {
-  return icsText.replace(/\r?\n[ \t]/g, "").split(/\r?\n/);
-}
-
-function getPropertyName(line) {
-  return line.split(":", 1)[0].split(";", 1)[0];
-}
-
-function getPropertyValue(line) {
-  const separatorIndex = line.indexOf(":");
-
-  if (separatorIndex === -1) {
-    return "";
-  }
-
-  return line.slice(separatorIndex + 1);
-}
-
-function decodeIcsText(value) {
-  return value
-    .replace(/\\n/g, "\n")
-    .replace(/\\,/g, ",")
-    .replace(/\\;/g, ";")
-    .replace(/\\\\/g, "\\");
-}
-
-function extractFirstUrl(value) {
-  return value.match(/https?:\/\/\S+/)?.[0] || "";
-}
-
-function removeUrls(value) {
-  return value.replace(/https?:\/\/\S+/g, "").trim();
-}
-
-function parseIcsDate(value) {
-  if (!value) {
-    return null;
-  }
-
-  const datePart = value.slice(0, 8);
-  const year = Number(datePart.slice(0, 4));
-  const month = Number(datePart.slice(4, 6)) - 1;
-  const day = Number(datePart.slice(6, 8));
-
-  if (!year || month < 0 || !day) {
-    return null;
-  }
-
-  if (value.includes("T")) {
-    const hour = Number(value.slice(9, 11));
-    const minute = Number(value.slice(11, 13));
-
-    return new Date(year, month, day, hour, minute);
-  }
-
-  return new Date(year, month, day);
-}
-
-function parseEvent(lines) {
-  const event = {};
-
-  lines.forEach((line) => {
-    const property = getPropertyName(line);
-    const value = getPropertyValue(line);
-
-    if (property === "UID") {
-      event.id = value;
-    }
-
-    if (property === "SUMMARY") {
-      event.title = decodeIcsText(value);
-    }
-
-    if (property === "DESCRIPTION") {
-      const description = decodeIcsText(value);
-
-      event.link = extractFirstUrl(description);
-      event.description = removeUrls(description);
-    }
-
-    if (property === "LOCATION") {
-      event.location = decodeIcsText(value);
-    }
-
-    if (property === "DTSTART") {
-      event.startDate = parseIcsDate(value);
-    }
-
-    if (property === "DTEND") {
-      event.endDate = parseIcsDate(value);
-    }
-  });
-
-  return event;
-}
-
-function parseIcsEvents(icsText) {
-  const lines = unfoldIcsLines(icsText);
-  const events = [];
-  let currentEvent = null;
-
-  lines.forEach((line) => {
-    if (line === "BEGIN:VEVENT") {
-      currentEvent = [];
-      return;
-    }
-
-    if (line === "END:VEVENT") {
-      if (currentEvent) {
-        events.push(parseEvent(currentEvent));
-      }
-
-      currentEvent = null;
-      return;
-    }
-
-    if (currentEvent) {
-      currentEvent.push(line);
-    }
-  });
-
-  return events;
-}
-
-async function fetchCalendarText() {
-  const response = await fetch(calendarUrl);
+async function fetchEventsFromFeed() {
+  const response = await fetch("/termine-feed.php", { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error(`Calendar request failed with status ${response.status}`);
   }
 
-  return response.text();
+  const data = await response.json();
+
+  return Array.isArray(data.events) ? data.events : [];
 }
 
-export function formatEventDate(date) {
-  if (!date) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("de-DE", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(date);
+function parseEvent(rawEvent) {
+  return {
+    id: rawEvent.id,
+    title: rawEvent.title || "",
+    startDate: rawEvent.start ? new Date(rawEvent.start) : null,
+    endDate: rawEvent.end ? new Date(rawEvent.end) : null,
+    allDay: Boolean(rawEvent.allDay),
+    location: rawEvent.location || "",
+    description: rawEvent.description || "",
+    attachmentUrl: rawEvent.attachmentUrl || "",
+  };
 }
 
 export async function fetchUpcomingEvents() {
@@ -163,9 +33,10 @@ export async function fetchUpcomingEvents() {
 }
 
 export async function fetchCalendarEvents() {
-  const icsText = await fetchCalendarText();
+  const rawEvents = await fetchEventsFromFeed();
 
-  return parseIcsEvents(icsText)
-    .filter((event) => event.startDate)
+  return rawEvents
+    .map(parseEvent)
+    .filter((event) => event.startDate && !Number.isNaN(event.startDate.getTime()))
     .sort((firstEvent, secondEvent) => firstEvent.startDate - secondEvent.startDate);
 }
