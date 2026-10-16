@@ -21,7 +21,6 @@ try {
             ),
             'visible_until' => $post['visible_until'],
             'created_at' => $post['created_at'],
-            'author_username' => $post['author_username'],
         ],
         member_area_news_list('public')
     );

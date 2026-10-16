@@ -140,7 +140,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 member_area_news_delete_image($uploadedImagePath);
             }
 
-            $error = $errorObject->getMessage();
+            // Our own RuntimeExceptions carry user-facing German messages; database
+            // errors (PDOException is a RuntimeException too) must not leak SQL details.
+            if (member_area_is_database_exception($errorObject)) {
+                error_log('News save failed: ' . $errorObject->getMessage());
+                $error = 'Der Beitrag konnte nicht gespeichert werden. Bitte versuche es später erneut.';
+            } elseif ($errorObject instanceof RuntimeException) {
+                $error = $errorObject->getMessage();
+            } else {
+                error_log('News save failed: ' . $errorObject->getMessage());
+                $error = 'Der Beitrag konnte nicht gespeichert werden.';
+            }
         }
     }
 }
@@ -155,6 +165,7 @@ member_area_page_start($postId > 0 ? 'News bearbeiten' : 'News verfassen');
   <?php endif; ?>
 
   <form method="post" action="/mitglieder/news-edit.php" enctype="multipart/form-data" data-created-at="<?= member_area_escape($createdAt) ?>" data-max-gallery-images="<?= MEMBER_AREA_NEWS_MAX_IMAGES ?>">
+    <?= member_area_csrf_field() ?>
     <input type="hidden" name="id" value="<?= (int)$postId ?>">
     <input type="hidden" id="body_html" name="body_html" value="<?= member_area_escape($bodyHtml) ?>">
     <input type="hidden" id="return_to_edit" name="return_to_edit" value="0">

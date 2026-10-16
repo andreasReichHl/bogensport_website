@@ -16,12 +16,29 @@ $profile = [
 ];
 $error = '';
 
+function member_area_verify_current_password(int $userId, string $password): bool
+{
+    if ($password === '') {
+        return false;
+    }
+
+    $statement = member_area_db()->prepare('SELECT password_hash FROM users WHERE id = ? LIMIT 1');
+    $statement->execute([$userId]);
+    $passwordHash = $statement->fetchColumn();
+
+    return is_string($passwordHash) && password_verify($password, $passwordHash);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = strtolower(trim($_POST['username'] ?? ''));
     $name = trim($_POST['name'] ?? '');
     $email = strtolower(trim($_POST['email'] ?? ''));
     $newPassword = (string)($_POST['new_password'] ?? '');
     $confirmPassword = (string)($_POST['confirm_password'] ?? '');
+    $currentPassword = (string)($_POST['current_password'] ?? '');
+    $changesCredentials = $newPassword !== ''
+        || $email !== $profile['email']
+        || $username !== $profile['username'];
 
     $profile = array_merge($profile, [
         'username' => $username,
@@ -37,14 +54,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = $passwordError;
     } elseif ($newPassword !== $confirmPassword) {
         $error = 'Die Passwort-Wiederholung stimmt nicht überein.';
+    } elseif ($changesCredentials && !member_area_verify_current_password($profile['id'], $currentPassword)) {
+        // Login data can only be changed with the current password, so a briefly
+        // unattended session is not enough to take over the account.
+        $error = 'Zum Ändern von Benutzername, E-Mail oder Passwort bitte das aktuelle Passwort eingeben.';
     } else {
         $pdo = member_area_db();
 
         try {
             if ($newPassword !== '') {
+                // token_version + 1 logs out all other sessions that still use the old password.
                 $statement = $pdo->prepare(
                     'UPDATE users
-                     SET username = ?, email = ?, name = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP
+                     SET username = ?, email = ?, name = ?, password_hash = ?,
+                         token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP
                      WHERE id = ?'
                 );
                 $statement->execute([
@@ -82,7 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: /mitglieder/profil.php');
             exit;
         } catch (PDOException $errorObject) {
-            $error = 'Benutzername oder E-Mail-Adresse wird bereits verwendet.';
+            if (($errorObject->errorInfo[0] ?? '') === '23000') {
+                $error = 'Benutzername oder E-Mail-Adresse wird bereits verwendet.';
+            } else {
+                error_log('Profile update failed: ' . $errorObject->getMessage());
+                $error = member_area_database_unavailable_message();
+            }
         }
     }
 }
@@ -97,6 +125,7 @@ member_area_page_start('Mein Profil');
   <?php endif; ?>
 
   <form method="post" action="/mitglieder/profil.php">
+    <?= member_area_csrf_field() ?>
     <label>
       Benutzername
       <input name="username" value="<?= member_area_escape($profile['username']) ?>" maxlength="40" pattern="[A-Za-z0-9._-]{3,40}" autocomplete="username" required>
@@ -136,6 +165,19 @@ member_area_page_start('Mein Profil');
       <span class="password-field">
         <input id="confirm_password" name="confirm_password" type="password" minlength="8" autocomplete="new-password">
         <button type="button" class="password-toggle" data-password-toggle="confirm_password" aria-label="Passwort anzeigen" aria-pressed="false">
+          <span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>
+        </button>
+      </span>
+    </label>
+
+    <h2>Bestätigung</h2>
+    <p>Für Änderungen an Benutzername, E-Mail oder Passwort ist dein aktuelles Passwort nötig.</p>
+
+    <label>
+      Aktuelles Passwort
+      <span class="password-field">
+        <input id="current_password" name="current_password" type="password" autocomplete="current-password">
+        <button type="button" class="password-toggle" data-password-toggle="current_password" aria-label="Passwort anzeigen" aria-pressed="false">
           <span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>
         </button>
       </span>

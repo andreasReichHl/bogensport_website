@@ -136,6 +136,7 @@ member_area_page_start('Benutzer');
     <h2 id="disable_user_title">Benutzer deaktivieren?</h2>
     <p id="disable_user_description">Soll dieser Benutzer wirklich deaktiviert werden?</p>
     <form method="post" action="/mitglieder/admin/users.php">
+      <?= member_area_csrf_field() ?>
       <input type="hidden" name="action" value="disable_user">
       <input type="hidden" id="disable_user_id" name="user_id" value="">
       <div class="modal-actions">

@@ -4,10 +4,10 @@ Der Mitgliederbereich nutzt PHP, MySQL 5.7 und ein JWT in einem `HttpOnly`-Cooki
 
 ## Benötigte Strato-Daten
 
-- Datenbank-Host, hier `database-5020917382.webspace-host.com`
+- Datenbank-Host
 - Datenbank-Port, meist `3306`
-- Datenbankname, hier `dbs15892878`
-- Datenbankbenutzer, hier `dbu740833`
+- Datenbankname
+- Datenbankbenutzer
 - Datenbankpasswort
 
 Diese Werte gehören nicht ins Git-Repository.
@@ -43,7 +43,7 @@ Alternativ den Inhalt von `schema.sql` in phpMyAdmin ausführen.
 Wenn lokal oder auf dem Server PHP-CLI verfügbar ist:
 
 ```bash
-php private/member-area/create-user.php mail@example.de "SICHERES_PASSWORT" superadmin "Name"
+php private/member-area/create-user.php benutzername mail@example.de "SICHERES_PASSWORT" superadmin "Name"
 ```
 
 Falls PHP-CLI bei Strato nicht verfügbar ist, kann der Passwort-Hash lokal erzeugt und per SQL eingefügt werden.
@@ -54,9 +54,9 @@ Alternativ kann der erste Superadmin im Browser angelegt werden:
 2. Den SHA-256-Hash davon in `config.local.php` unter `setup.token_hash` eintragen.
 3. `/mitglieder/setup.php?token=DEIN_TOKEN` im Browser öffnen.
 
-Sobald ein Benutzer existiert, deaktiviert sich dieses Setup automatisch.
+Sobald ein Benutzer existiert, deaktiviert sich dieses Setup automatisch. Danach `setup.token_hash` in `config.local.php` wieder leeren.
 
-Der Login akzeptiert E-Mail-Adresse oder exakt hinterlegten Namen. Namen sollten eindeutig sein; wenn ein Name mehrfach vorkommt, wird der Login per Name aus Sicherheitsgründen abgelehnt.
+Der Login akzeptiert Benutzername oder E-Mail-Adresse. Nach 5 Fehlversuchen für denselben Login oder 20 Fehlversuchen von derselben IP wird der Login für 15 Minuten gesperrt (Tabelle `login_attempts`, wird bei Bedarf automatisch angelegt; gespeichert werden nur gehashte Werte).
 
 ## DB-Verbindung im Browser prüfen
 
@@ -66,4 +66,11 @@ Für einen temporären DB-Check:
 2. Den SHA-256-Hash davon in `config.local.php` unter `diagnostics.token_hash` eintragen.
 3. `/mitglieder/check-db.php?token=DEIN_TOKEN` im Browser öffnen.
 
-Ohne passenden Token antwortet die Datei mit `404`.
+Ohne passenden Token antwortet die Datei mit `404`. Nach dem Check `diagnostics.token_hash` wieder leeren.
+
+## Deployment
+
+- `private/` muss außerhalb des Webroots liegen. Falls das nicht geht, schützt nur `private/.htaccess`; dann prüfen, dass `/private/member-area/README.md` im Browser `403` liefert.
+- `uploads/news/` auf dem Server enthält die echten News-Bilder. Beim Hochladen von `dist/` diesen Ordner nie überschreiben oder per Synchronisation löschen lassen.
+- Nach dem Deployment prüfen, dass `http://` auf `https://` weiterleitet (Regel in `public/.htaccess`).
+- Migrationen aus `migrations/` in Reihenfolge in phpMyAdmin ausführen, falls die Tabellen noch fehlen.

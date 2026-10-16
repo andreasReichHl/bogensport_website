@@ -27,3 +27,7 @@ dist-ssr
 .env.example
 .env.local
 private/member-area/config.local.php
+
+# Hochgeladene News-Bilder sind Inhalte, kein Code
+public/uploads/news/*
+!public/uploads/news/.gitkeep

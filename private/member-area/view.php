@@ -23,6 +23,20 @@ function member_area_format_date(?string $value): string
 function member_area_flash_session_start(): void
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
+        $secureCookie = true;
+
+        if (function_exists('member_area_config')) {
+            $secureCookie = (bool)(member_area_config()['jwt']['secure_cookie'] ?? true);
+        }
+
+        session_name('bobs_member_flash');
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/mitglieder',
+            'secure' => $secureCookie,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
         session_start();
     }
 }
@@ -66,7 +80,6 @@ function member_area_page_start(string $title): void
     $currentPath = parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '';
     $dashboardCurrent = $currentPath === '/mitglieder/dashboard.php' ? ' aria-current="page"' : '';
     $profileCurrent = $currentPath === '/mitglieder/profil.php' ? ' aria-current="page"' : '';
-    $logoutCurrent = $currentPath === '/mitglieder/logout.php' ? ' aria-current="page"' : '';
     $currentUser = null;
 
     if (function_exists('member_area_current_user')) {
@@ -80,12 +93,18 @@ function member_area_page_start(string $title): void
     }
 
     $isLoggedIn = $currentUser !== null;
+
+    if (!headers_sent()) {
+        // Member pages contain personal data and must not end up in shared caches or
+        // the back-button cache after logout.
+        header('Cache-Control: private, no-store');
+    }
     $flash = member_area_take_flash();
 
     echo '<!doctype html><html lang="de"><head><meta charset="utf-8">';
     echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<title>' . member_area_escape($title) . ' - Mitgliederbereich</title>';
-    echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0,0">';
+    echo '<link rel="stylesheet" href="' . member_area_escape(member_area_asset_url('/mitglieder/assets/vendor/material-symbols/material-symbols.css')) . '">';
     echo '<link rel="stylesheet" href="' . member_area_escape(member_area_asset_url('/mitglieder/assets/vendor/quill/quill.snow.css')) . '">';
     echo '<link rel="stylesheet" href="' . member_area_escape(member_area_asset_url('/mitglieder/assets/vendor/cropper/cropper.min.css')) . '">';
     echo '<link rel="stylesheet" href="' . member_area_escape(member_area_asset_url('/assets/shared/news-content.css')) . '">';
@@ -107,7 +126,10 @@ function member_area_page_start(string $title): void
         echo '<nav class="site-nav" aria-label="Mitgliederbereich">';
         echo '<a href="/mitglieder/dashboard.php"' . $dashboardCurrent . '>Dashboard</a>';
         echo '<a href="/mitglieder/profil.php"' . $profileCurrent . '>Profil</a>';
-        echo '<a href="/mitglieder/logout.php"' . $logoutCurrent . '>Logout</a>';
+        echo '<form class="site-nav-form" method="post" action="/mitglieder/logout.php">';
+        echo member_area_csrf_field();
+        echo '<button class="site-nav-button" type="submit">Logout</button>';
+        echo '</form>';
         echo '</nav>';
         echo '<a class="site-user" href="/mitglieder/profil.php" aria-label="Profil von ' . member_area_escape($currentUser['username'] ?? '') . '">';
         echo '<span class="site-user-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>';

@@ -17,8 +17,9 @@ try {
         throw $errorObject;
     }
 
+    error_log('Member area login check failed: ' . $errorObject->getMessage());
     http_response_code(503);
-    $error = $errorObject->getMessage();
+    $error = member_area_database_unavailable_message();
     $databaseUnavailable = true;
 }
 
@@ -27,19 +28,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     try {
-        if (member_area_login($identifier, $password)) {
+        $loginResult = member_area_login((string)$identifier, (string)$password);
+
+        if ($loginResult === 'ok') {
             header('Location: /mitglieder/dashboard.php');
             exit;
         }
 
-        $error = 'Loginname oder Passwort ist ungültig.';
+        if ($loginResult === 'locked') {
+            http_response_code(429);
+            $error = 'Zu viele fehlgeschlagene Anmeldeversuche. Bitte warte ' . MEMBER_AREA_LOGIN_WINDOW_MINUTES . ' Minuten und versuche es dann erneut.';
+        } else {
+            $error = 'Loginname oder Passwort ist ungültig.';
+        }
     } catch (Throwable $errorObject) {
         if (!member_area_is_database_exception($errorObject)) {
             throw $errorObject;
         }
 
+        error_log('Member area login failed: ' . $errorObject->getMessage());
         http_response_code(503);
-        $error = $errorObject->getMessage();
+        $error = member_area_database_unavailable_message();
         $databaseUnavailable = true;
     }
 }

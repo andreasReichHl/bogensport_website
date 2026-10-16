@@ -151,6 +151,7 @@ member_area_page_start('News');
     <h2 id="delete_post_title">Beitrag unwiderruflich löschen?</h2>
     <p id="delete_post_description">Soll dieser Beitrag wirklich unwiderruflich gelöscht werden? Der Beitrag und alle zugehörigen Bilder werden dauerhaft entfernt.</p>
     <form method="post" action="/mitglieder/news.php">
+      <?= member_area_csrf_field() ?>
       <input type="hidden" name="action" value="delete_post">
       <input type="hidden" name="confirm_delete" value="1">
       <input type="hidden" id="delete_post_id" name="post_id" value="">

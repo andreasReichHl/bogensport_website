@@ -35,6 +35,18 @@ if (!$isNewUser) {
     }
 }
 
+$originalRole = (string)$editedUser['role'];
+
+function member_area_count_other_active_superadmins(int $excludedUserId): int
+{
+    $statement = member_area_db()->prepare(
+        "SELECT COUNT(*) FROM users WHERE role = 'superadmin' AND is_active = 1 AND id <> ?"
+    );
+    $statement->execute([$excludedUserId]);
+
+    return (int)$statement->fetchColumn();
+}
+
 $grantableModules = member_area_grantable_modules();
 $selectedModules = $isNewUser ? [] : member_area_user_module_keys($userId);
 $message = '';
@@ -47,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = (string)($_POST['password'] ?? '');
     $role = $_POST['role'] ?? '';
     $isActive = isset($_POST['is_active']) ? 1 : 0;
-    $postedModules = $_POST['modules'] ?? [];
+    $postedModules = is_array($_POST['modules'] ?? null) ? $_POST['modules'] : [];
     $allowedModuleKeys = array_keys($grantableModules);
     $moduleKeys = array_values(array_intersect($allowedModuleKeys, $postedModules));
 
@@ -68,6 +80,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = $passwordError;
     } elseif (!in_array($role, MEMBER_ROLES, true)) {
         $error = 'Bitte eine gültige Rolle auswählen.';
+    } elseif (!$isNewUser && $userId === (int)$currentUser['id'] && !$isActive) {
+        $error = 'Der eigene Benutzer kann nicht deaktiviert werden.';
+    } elseif (
+        !$isNewUser &&
+        $originalRole === 'superadmin' &&
+        ($role !== 'superadmin' || !$isActive) &&
+        member_area_count_other_active_superadmins($userId) === 0
+    ) {
+        $error = 'Der letzte aktive Superadmin kann nicht herabgestuft oder deaktiviert werden.';
     } else {
         $pdo = member_area_db();
         $pdo->beginTransaction();
@@ -145,6 +166,7 @@ member_area_page_start($isNewUser ? 'Benutzer anlegen' : 'Benutzer bearbeiten');
   <?php endif; ?>
 
   <form method="post" action="/mitglieder/admin/user.php">
+    <?= member_area_csrf_field() ?>
     <input type="hidden" name="id" value="<?= (int)$editedUser['id'] ?>">
 
     <?php if ($isNewUser): ?>

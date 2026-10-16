@@ -1,0 +1,8 @@
+/* Material Symbols Outlined (Google, Apache License 2.0), lokal gehostet statt über fonts.googleapis.com. */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(material-symbols-outlined.woff2) format('woff2');
+}
