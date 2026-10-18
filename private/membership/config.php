@@ -50,8 +50,8 @@ function membership_config(): array
             ? ($raw['easyverein_sync'] ?? 'off')
             : 'off',
         // After this many failed transfer attempts the application is marked sync_failed and
-        // the board is alerted. The cron job runs only daily on Strato, so keep this small.
-        'sync_max_attempts' => (int)($raw['sync_max_attempts'] ?? 3),
+        // the board is alerted.
+        'sync_max_attempts' => (int)($raw['sync_max_attempts'] ?? 5),
         // Days after the successful transfer until the local copy is deleted (the PDF and all
         // data are then only in easyVerein). Unconfirmed applications: confirm_ttl_hours.
         'retention_days' => (int)($raw['retention_days'] ?? 90),

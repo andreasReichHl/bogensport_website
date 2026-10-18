@@ -219,7 +219,7 @@ export default function Datenschutz() {
             <p>
               Auf dem Server unserer Website werden die Antragsdaten verschlüsselt gespeichert. Nicht bestätigte
               Anträge können nur innerhalb von 48 Stunden bestätigt werden; danach löschen wir sie, spätestens nach
-              4 Tagen. Bestätigte Anträge werden an easyVerein übertragen; die Kopie auf dem
+              3 Tagen. Bestätigte Anträge werden an easyVerein übertragen; die Kopie auf dem
               Server unserer Website löschen wir, sobald der Vorstand über den Antrag entschieden hat, spätestens
               90 Tage nach der Übertragung. In easyVerein speichern wir die Daten für
               die Dauer der Mitgliedschaft und darüber hinaus, soweit gesetzliche Aufbewahrungspflichten bestehen.

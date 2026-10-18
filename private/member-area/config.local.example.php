@@ -51,7 +51,7 @@ return array (
     'board_email' => 'vorstand@badoldesloer-bogensport.de',
     // Locally only dry-run: nothing is written to the (production!) easyVerein. 'live' in production.
     'easyverein_sync' => 'dry-run',
-    'sync_max_attempts' => 3,
+    'sync_max_attempts' => 5,
     'retention_days' => 90,
     // Locally: Mailpit from docker-compose (no auth, no TLS) - mails show up at
     // http://localhost:8025 instead of being delivered. Production: the Strato mailbox
