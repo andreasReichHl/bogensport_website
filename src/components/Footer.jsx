@@ -118,6 +118,7 @@ export default function Footer() {
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-4 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between">
           <p>© {currentYear} Bogensport Bad Oldesloe e.V.</p>
           <div className="flex gap-8">
+            <Link to="/satzung" className={getLinkClassName("/satzung")} aria-current={location.pathname === "/satzung" ? "page" : undefined}>Satzung</Link>
             <Link to="/impressum" className={getLinkClassName("/impressum")} aria-current={location.pathname === "/impressum" ? "page" : undefined}>Impressum</Link>
             <Link to="/datenschutz" className={getLinkClassName("/datenschutz")} aria-current={location.pathname === "/datenschutz" ? "page" : undefined}>Datenschutz</Link>
           </div>

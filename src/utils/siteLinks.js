@@ -18,7 +18,9 @@ export const memberAreaLink = { label: "Mitgliederbereich", href: withBasePath("
 
 export const footerNavigationLinks = [...mainNavigationLinks, trialTrainingLink, memberAreaLink];
 
+export const satzungPdfLink = { label: "Satzung", href: withBasePath("/downloads/satzung.pdf") };
+
 export const downloadLinks = [
   { label: "Mitgliedsantrag", href: withBasePath("/downloads/mitgliedsantrag.pdf") },
-  { label: "Satzung", href: withBasePath("/downloads/satzung.pdf") },
+  satzungPdfLink,
 ];

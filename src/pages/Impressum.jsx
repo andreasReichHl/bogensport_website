@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { mailto, siteConfig } from "../utils/siteConfig.js";
 
 export default function Impressum() {
@@ -19,6 +20,14 @@ export default function Impressum() {
               <div>
                 <dt className="font-semibold text-slate-950">Gegründet</dt>
                 <dd>12.2009</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-950">Satzung</dt>
+                <dd>
+                  <Link className="text-[#002f5f] underline-offset-4 hover:underline" to="/satzung">
+                    Satzung online lesen
+                  </Link>
+                </dd>
               </div>
             </dl>
           </section>

@@ -11,6 +11,7 @@ import News from "./pages/News.jsx";
 import NewsDetail from "./pages/NewsDetail.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import Probetraining from "./pages/Probetraining.jsx";
+import Satzung from "./pages/Satzung.jsx";
 import Termine from "./pages/Termine.jsx";
 import Training from "./pages/Training.jsx";
 import Verein from "./pages/Verein.jsx";
@@ -56,6 +57,10 @@ const router = createBrowserRouter(
         {
           path: 'news/:id',
           element: <NewsDetail />,
+        },
+        {
+          path: 'satzung',
+          element: <Satzung />,
         },
         {
           path: 'impressum',

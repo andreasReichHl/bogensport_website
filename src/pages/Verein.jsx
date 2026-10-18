@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Hero from "../components/Hero.jsx";
 import { BulletList, ContentSection } from "../components/ContentSection.jsx";
 
@@ -61,6 +62,13 @@ export default function Verein() {
                                 <p>Der Bad Oldesloer Bogensport e.V. ist ein reiner Bogensportverein. Im Mittelpunkt
                                     stehen bei uns:</p>
                                 <BulletList items={focusItems}/>
+                                <p>
+                                    Grundlage unserer Vereinsarbeit ist unsere{" "}
+                                    <Link className="text-[#002f5f] underline underline-offset-4 hover:no-underline" to="/satzung">
+                                        Satzung
+                                    </Link>
+                                    .
+                                </p>
                                 <p>
                                     Unser sportlicher Schwerpunkt liegt im Bereich des FITA-orientierten Schießens mit
                                     Recurve-, Compound-
