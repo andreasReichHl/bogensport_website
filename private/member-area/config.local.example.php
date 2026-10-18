@@ -47,7 +47,8 @@ return array (
     'creditor_id' => '',
     // Vite dev server; links in mails point here locally.
     'site_url' => 'http://localhost:5173',
-    'board_email' => 'beitritt@badoldesloer-bogensport.de',
+    // Receives a copy of every confirmed application (with PDF).
+    'board_email' => 'vorstand@badoldesloer-bogensport.de',
     // Locally: Mailpit from docker-compose (no auth, no TLS) - mails show up at
     // http://localhost:8025 instead of being delivered. Production: the real SMTP account of
     // beitritt@badoldesloer-bogensport.de with 'smtp_secure' => 'tls' (port 587) or 'ssl' (465).

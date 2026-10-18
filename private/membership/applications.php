@@ -46,6 +46,8 @@ function membership_ensure_applications_table(): void
           confirmed_ip VARCHAR(45) NULL,
           confirmed_user_agent VARCHAR(255) NULL,
           signature CHAR(64) NULL,
+          applicant_mailed_at DATETIME NULL,
+          board_mailed_at DATETIME NULL,
           easyverein_contact_id BIGINT UNSIGNED NULL,
           easyverein_member_id BIGINT UNSIGNED NULL,
           sync_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
@@ -282,4 +284,35 @@ function membership_confirm_application(int $id, string $ip, string $userAgent, 
     ]);
 
     return $statement->rowCount() === 1;
+}
+
+function membership_load_application(int $id): ?array
+{
+    $statement = member_area_db()->prepare('SELECT * FROM membership_applications WHERE id = ? LIMIT 1');
+    $statement->execute([$id]);
+    $row = $statement->fetch();
+
+    if ($row === false) {
+        return null;
+    }
+
+    $row['data'] = membership_decrypt($row['data_encrypted']);
+    unset($row['data_encrypted']);
+
+    return $row;
+}
+
+/**
+ * Sets a column that records a processing step (signature, mails, …) - but only if it is still
+ * NULL, so a step that already happened is never overwritten.
+ */
+function membership_mark_step(int $id, string $column, string $value): void
+{
+    if (!in_array($column, ['signature', 'applicant_mailed_at', 'board_mailed_at'], true)) {
+        throw new InvalidArgumentException("Unknown processing column {$column}");
+    }
+
+    member_area_db()
+        ->prepare("UPDATE membership_applications SET {$column} = ? WHERE id = ? AND {$column} IS NULL")
+        ->execute([$value, $id]);
 }

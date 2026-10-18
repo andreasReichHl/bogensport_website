@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS membership_applications (
   confirmed_ip VARCHAR(45) NULL,
   confirmed_user_agent VARCHAR(255) NULL,
   signature CHAR(64) NULL,
+  applicant_mailed_at DATETIME NULL,
+  board_mailed_at DATETIME NULL,
   easyverein_contact_id BIGINT UNSIGNED NULL,
   easyverein_member_id BIGINT UNSIGNED NULL,
   sync_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
