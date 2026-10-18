@@ -8,12 +8,15 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/calendar-proxy.php': {
-        target: 'https://nx92511.your-storageshare.de',
-        changeOrigin: true,
-        rewrite: () => '/remote.php/dav/public-calendars/5JpmMnqbqQrMCyYL?export',
-      },
       '/news-feed.php': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/termine-feed.php': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/termine-attachment.php': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },

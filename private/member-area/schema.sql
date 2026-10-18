@@ -60,3 +60,10 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   INDEX idx_login_attempts_identifier (identifier_hash, attempted_at),
   INDEX idx_login_attempts_ip (ip_hash, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS easyverein_tokens (
+  id TINYINT UNSIGNED PRIMARY KEY,
+  token VARCHAR(255) NOT NULL,
+  refreshed_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
