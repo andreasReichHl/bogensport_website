@@ -7,6 +7,7 @@ import Datenschutz from './pages/Datenschutz.jsx'
 import HomePage from './pages/HomePage.jsx'
 import Impressum from './pages/Impressum.jsx'
 import Layout from './Layout.jsx'
+import MitgliedWerden from "./pages/MitgliedWerden.jsx";
 import News from "./pages/News.jsx";
 import NewsDetail from "./pages/NewsDetail.jsx";
 import NotFound from "./pages/NotFound.jsx";
@@ -57,6 +58,10 @@ const router = createBrowserRouter(
         {
           path: 'news/:id',
           element: <NewsDetail />,
+        },
+        {
+          path: 'mitglied-werden',
+          element: <MitgliedWerden />,
         },
         {
           path: 'satzung',

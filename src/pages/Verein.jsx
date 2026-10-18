@@ -114,6 +114,20 @@ export default function Verein() {
                                     Zwischenmenschliche stimmt.
                                 </p>
                             </ContentSection>
+
+                            <ContentSection title="Mitglied werden">
+                                <p>
+                                    Du möchtest Teil unseres Vereins werden? Den Mitgliedsantrag kannst du bequem online
+                                    stellen.
+                                </p>
+                                <Link
+                                    to="/mitglied-werden"
+                                    className="inline-flex h-11 items-center justify-center gap-3 rounded-md bg-blue-600 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+                                >
+                                    Mitglied werden
+                                    <span aria-hidden="true">→</span>
+                                </Link>
+                            </ContentSection>
                         </div>
                     </article>
                 </div>

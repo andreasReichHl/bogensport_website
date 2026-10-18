@@ -19,6 +19,7 @@ try {
             'texts' => membership_texts(),
             'satzungVersion' => membership_config()['satzung_version'],
             'minimumAge' => membership_config()['minimum_age'],
+            'confirmTtlHours' => membership_config()['confirm_ttl_hours'],
         ],
         JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
     );

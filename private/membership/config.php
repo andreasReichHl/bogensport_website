@@ -33,6 +33,10 @@ function membership_config(): array
         'signature_key' => (string)($raw['signature_key'] ?? ''),
         'confirm_ttl_hours' => (int)($raw['confirm_ttl_hours'] ?? 48),
         'minimum_age' => (int)($raw['minimum_age'] ?? 8),
+        // One-time admission fee per easyVerein group id (Aufnahmegebühr), in EUR. Groups
+        // without an entry are NOT offered in the form, so a group ticked in easyVerein can't
+        // accidentally show up without a fee. 0 means "entfällt".
+        'admission_fees' => array_map('floatval', $raw['admission_fees'] ?? []),
         'creditor_id' => (string)($raw['creditor_id'] ?? ''),
         'board_email' => (string)($raw['board_email'] ?? ''),
         'mail' => $raw['mail'] ?? [],

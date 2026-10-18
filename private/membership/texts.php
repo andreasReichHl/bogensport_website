@@ -23,7 +23,8 @@ function membership_texts(): array
         'satzung' => 'Ich habe die Satzung des ' . MEMBERSHIP_CLUB_NAME . ' gelesen und erkenne sie mit meinem '
             . 'Beitritt an (§ 4 Abs. 6 der Satzung).',
         'beitrag' => 'Mir ist bekannt, dass mit Beginn der vorläufigen Mitgliedschaft die Beitragspflicht beginnt '
-            . '(§ 4 Abs. 7 der Satzung). Die Höhe des Beitrags richtet sich nach der gewählten Mitgliedsart.',
+            . '(§ 4 Abs. 7 der Satzung). Ferner ist die festgesetzte Aufnahmegebühr zu zahlen. Die Höhe von Beitrag '
+            . 'und Aufnahmegebühr richtet sich nach der gewählten Mitgliedsart.',
         'datenschutz' => 'Ich habe die Datenschutzhinweise zur Kenntnis genommen. Meine Angaben werden zur Durchführung '
             . 'der Mitgliedschaft verarbeitet und in der Vereinsverwaltung easyVerein gespeichert.',
         'sepa' => 'Ich ermächtige den ' . MEMBERSHIP_CLUB_NAME . ' (Gläubiger-Identifikationsnummer ' . $creditorId

@@ -36,6 +36,14 @@ return array (
     'signature_key' => '1ENls6HHtfzqWFStDBZ9bOC1/prc1doHM/Re5poMb2s=',
     'confirm_ttl_hours' => 48,
     'minimum_age' => 8,
+    // easyVerein group id => Aufnahmegebühr in EUR (Stand: Mitgliedsantrag-PDF).
+    'admission_fees' => 
+    array (
+      545567211 => 50.00, // Aktive Erwachsene
+      545568324 => 30.00, // Kinder & Jugendliche
+      545572428 => 30.00, // Auszubildende & Studierende
+      545587002 => 0.00,  // Passive Mitglieder (Aufnahmegebühr entfällt)
+    ),
     'creditor_id' => '',
     'board_email' => 'beitritt@badoldesloer-bogensport.de',
     'mail' => 

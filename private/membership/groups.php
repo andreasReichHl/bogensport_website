@@ -9,6 +9,7 @@
  */
 
 require_once __DIR__ . '/../easyverein/client.php';
+require_once __DIR__ . '/config.php';
 
 const MEMBERSHIP_GROUPS_CACHE_SECONDS = 600;
 
@@ -18,9 +19,29 @@ function membership_groups_cache_file(): string
 }
 
 /**
- * @return list<array{id:int,name:string,amount:?float,intervalMonths:int,maxAge:?int}>
+ * @return list<array{id:int,name:string,amount:?float,intervalMonths:int,maxAge:?int,admissionFee:float}>
  */
 function membership_groups(): array
+{
+    $admissionFees = membership_config()['admission_fees'];
+    $groups = [];
+
+    foreach (membership_easyverein_groups() as $group) {
+        if (!array_key_exists($group['id'], $admissionFees)) {
+            error_log("Membership group {$group['id']} ({$group['name']}) is offered in easyVerein but has no admission fee configured - not shown in the form");
+            continue;
+        }
+
+        $groups[] = [...$group, 'admissionFee' => $admissionFees[$group['id']]];
+    }
+
+    return $groups;
+}
+
+/**
+ * The groups ticked "Im Aufnahmeformular anzeigen" in easyVerein (cached).
+ */
+function membership_easyverein_groups(): array
 {
     $cacheFile = membership_groups_cache_file();
 

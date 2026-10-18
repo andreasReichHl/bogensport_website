@@ -14,9 +14,11 @@ export const mainNavigationLinks = [
 
 export const trialTrainingLink = { label: "Probetraining", to: "/probetraining" };
 
+export const membershipLink = { label: "Mitglied werden", to: "/mitglied-werden" };
+
 export const memberAreaLink = { label: "Mitgliederbereich", href: withBasePath("/mitglieder/") };
 
-export const footerNavigationLinks = [...mainNavigationLinks, trialTrainingLink, memberAreaLink];
+export const footerNavigationLinks = [...mainNavigationLinks, trialTrainingLink, membershipLink, memberAreaLink];
 
 export const satzungPdfLink = { label: "Satzung", href: withBasePath("/downloads/satzung.pdf") };
 
