@@ -204,6 +204,11 @@ function membership_send_board_mail(array $row, array $pdf, string $syncOutcome)
         {$notesText}Alle Angaben inkl. SEPA-Mandat stehen im angehängten PDF. Die Prüfsumme im PDF lässt sich auf dem
         Server prüfen mit: php private/membership/verify.php {$row['reference']}
 
+        Entscheidung in easyVerein unter den Mitgliedsanträgen: Bitte den Antrag ANNEHMEN oder ABLEHNEN,
+        nicht löschen. Beim Ablehnen entfernt easyVerein Mitglied und Kontaktdaten sofort; beim Löschen
+        landet das Mitglied 30 Tage im Papierkorb und Adresse und Bankverbindung bleiben so lange gespeichert.
+        Nach der Annahme erhält das neue Mitglied automatisch eine Willkommens-Mail von der Website.
+
         Antworten auf diese E-Mail gehen direkt an den Antragsteller bzw. die Erziehungsberechtigten.
         TEXT;
 
