@@ -7,6 +7,7 @@
  * binding once that link is used (double opt-in). Responses:
  *   201 {"ok": true}                       stored, confirmation mail sent
  *   422 {"errors": {"field.path": "..."}}  validation failed
+ *   409 {"error": "duplicate"}               an application for this person already exists
  *   429 {"error": "rate_limited"}
  *   503 {"error": "unavailable"}
  */
@@ -52,6 +53,8 @@ try {
     }
 
     membership_respond(201, ['ok' => true]);
+} catch (MembershipDuplicateException) {
+    membership_respond(409, ['error' => 'duplicate']);
 } catch (MembershipRateLimitException) {
     membership_respond(429, ['error' => 'rate_limited']);
 } catch (EasyvereinTokenException | EasyvereinApiException | MemberAreaDatabaseException | PDOException | MembershipConfigException | MembershipMailException $error) {

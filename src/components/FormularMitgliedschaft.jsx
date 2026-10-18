@@ -22,6 +22,7 @@ const emptyValues = {
         phone: "",
     },
     guardian: {firstName: "", lastName: "", email: "", phone: ""},
+    managedBy: "",
     bank: {accountHolder: "", iban: "", bic: ""},
     consents: {satzung: false, beitrag: false, datenschutz: false, sepa: false, erziehungsberechtigt: false, fotos: false},
     website: "",
@@ -33,7 +34,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Whether all required fields are filled and all required declarations ticked - only enables
  * the submit button. The server validates everything again (incl. IBAN check digits).
  */
-function isFormComplete(values, isMinor) {
+function isFormComplete(values, isMinor, needsGuardian) {
     const {applicant, guardian, bank, consents} = values;
     const filled = (...fields) => fields.every((field) => field.trim() !== "");
 
@@ -41,9 +42,10 @@ function isFormComplete(values, isMinor) {
             applicant.street, applicant.city, bank.accountHolder, bank.iban)
         && /^\d{5}$/.test(applicant.zip)
         && (isMinor ? applicant.email === "" || emailPattern.test(applicant.email) : emailPattern.test(applicant.email))
-        && (!isMinor || (filled(guardian.firstName, guardian.lastName) && emailPattern.test(guardian.email)))
+        && (!needsGuardian
+            || (values.managedBy !== "" && filled(guardian.firstName, guardian.lastName) && emailPattern.test(guardian.email)))
         && consents.satzung && consents.beitrag && consents.datenschutz && consents.sepa
-        && (!isMinor || consents.erziehungsberechtigt);
+        && (!needsGuardian || consents.erziehungsberechtigt);
 }
 
 const paperApplicationLink = downloadLinks.find((link) => link.label === "Mitgliedsantrag");
@@ -130,8 +132,11 @@ export default function FormularMitgliedschaft() {
     const age = ageOn(values.applicant.dateOfBirth);
     const isMinor = age !== null && age < 18;
     const selectedGroup = config?.groups.find((group) => String(group.id) === values.groupId) ?? null;
-    const confirmationEmail = isMinor ? values.guardian.email : values.applicant.email;
-    const canSubmit = isFormComplete(values, isMinor) && submissionState !== "submitting";
+    // The guardian part shows up for minors and as soon as an age-limited group (Kinder &
+    // Jugendliche) is picked - even before the date of birth is entered.
+    const needsGuardian = isMinor || (selectedGroup?.maxAge ?? null) !== null;
+    const confirmationEmail = needsGuardian ? values.guardian.email : values.applicant.email;
+    const canSubmit = isFormComplete(values, isMinor, needsGuardian) && submissionState !== "submitting";
 
     function setValue(section, key, value) {
         setValues((current) => ({...current, [section]: {...current[section], [key]: value}}));
@@ -152,7 +157,8 @@ export default function FormularMitgliedschaft() {
         const result = await submitMembershipApplication({
             ...values,
             groupId: Number(values.groupId),
-            guardian: isMinor ? values.guardian : null,
+            guardian: needsGuardian ? values.guardian : null,
+            managedBy: needsGuardian ? values.managedBy : null,
             satzungVersion: satzungMeta.version,
             textsVersion: config.texts.version,
         });
@@ -297,7 +303,8 @@ export default function FormularMitgliedschaft() {
                                     </Field>
                                     <div className="sm:col-span-2">
                                         <Field label={isMinor ? "E-Mail (optional)" : "E-Mail"} required={!isMinor}
-                                               error={errors["applicant.email"]}>
+                                               error={errors["applicant.email"]}
+                                               hint="Du kannst dieselbe E-Mail-Adresse für mehrere Familienmitglieder verwenden.">
                                             <input className={inputClass} type="email" autoComplete="email"
                                                    placeholder="beispiel@domain.de" required={!isMinor}
                                                    {...bindInput("applicant", "email")}/>
@@ -306,13 +313,33 @@ export default function FormularMitgliedschaft() {
                                 </div>
                             </section>
 
-                            {isMinor && (
+                            {needsGuardian && (
                                 <section className="border-t border-slate-200 pt-8">
                                     <SectionTitle number="2a">Erziehungsberechtigte/r</SectionTitle>
                                     <p className="mb-5 text-sm text-slate-600">
                                         Für Minderjährige stellt ein/e Erziehungsberechtigte/r den Antrag. Die
                                         Bestätigungs-E-Mail geht an die hier angegebene Adresse.
                                     </p>
+                                    <fieldset className="mb-5 space-y-3 text-sm text-slate-700">
+                                        <legend className="mb-3 font-semibold">
+                                            Wie soll die Mitgliedschaft verwaltet werden? *
+                                        </legend>
+                                        {["eltern", "kind"].map((option) => (
+                                            <label key={option} className="flex items-start gap-3">
+                                                <input
+                                                    className="mt-0.5 h-5 w-5 shrink-0 accent-blue-600"
+                                                    type="radio"
+                                                    name="managedBy"
+                                                    value={option}
+                                                    checked={values.managedBy === option}
+                                                    onChange={() => setValues((current) => ({...current, managedBy: option}))}
+                                                    required
+                                                />
+                                                <span>{texts[`verwaltung_${option}`]}</span>
+                                            </label>
+                                        ))}
+                                        {errors.managedBy && <p className="text-red-700">{errors.managedBy}</p>}
+                                    </fieldset>
                                     <div className="grid gap-5 sm:grid-cols-2">
                                         <Field label="Vorname" required error={errors["guardian.firstName"]}>
                                             <input className={inputClass} required {...bindInput("guardian", "firstName")}/>
@@ -320,7 +347,11 @@ export default function FormularMitgliedschaft() {
                                         <Field label="Nachname" required error={errors["guardian.lastName"]}>
                                             <input className={inputClass} required {...bindInput("guardian", "lastName")}/>
                                         </Field>
-                                        <Field label="E-Mail" required error={errors["guardian.email"]}>
+                                        <Field
+                                            label={values.managedBy === "eltern" ? "E-Mail deines easyVerein-Zugangs" : "E-Mail"}
+                                            required
+                                            error={errors["guardian.email"]}
+                                        >
                                             <input className={inputClass} type="email" required
                                                    {...bindInput("guardian", "email")}/>
                                         </Field>
@@ -395,7 +426,7 @@ export default function FormularMitgliedschaft() {
                                             Datenschutzerklärung
                                         </Link>
                                     </Consent>
-                                    {isMinor && (
+                                    {needsGuardian && (
                                         <Consent
                                             checked={values.consents.erziehungsberechtigt}
                                             onChange={(checked) => setValue("consents", "erziehungsberechtigt", checked)}
@@ -466,6 +497,12 @@ export default function FormularMitgliedschaft() {
                             <p className="mt-4 text-sm text-slate-500">
                                 Bitte fülle alle Pflichtfelder aus und bestätige die Pflicht-Erklärungen, um den Antrag
                                 abzusenden.
+                            </p>
+                        )}
+                        {submissionState === "duplicate" && (
+                            <p className="mt-4 text-sm font-semibold text-red-700">
+                                Für diese Person liegt bereits ein Antrag vor. Bitte prüfe dein Postfach (auch den
+                                Spam-Ordner) auf die Bestätigungs-E-Mail.
                             </p>
                         )}
                         {submissionState === "rate_limited" && (

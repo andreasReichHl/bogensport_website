@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS membership_applications (
   status ENUM('pending', 'confirmed', 'synced', 'sync_failed') NOT NULL DEFAULT 'pending',
   data_encrypted MEDIUMBLOB NOT NULL,
   email_hash CHAR(64) NOT NULL,
+  person_hash CHAR(64) NOT NULL,
   confirm_token_hash CHAR(64) NULL UNIQUE,
   confirm_expires_at DATETIME NOT NULL,
   submitted_at DATETIME NOT NULL,
@@ -91,5 +92,6 @@ CREATE TABLE IF NOT EXISTS membership_applications (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_membership_applications_status (status, confirm_expires_at),
   INDEX idx_membership_applications_ip (submitted_ip, submitted_at),
-  INDEX idx_membership_applications_email (email_hash, submitted_at)
+  INDEX idx_membership_applications_email (email_hash, submitted_at),
+  INDEX idx_membership_applications_person (person_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

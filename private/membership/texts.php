@@ -11,7 +11,7 @@
 
 require_once __DIR__ . '/config.php';
 
-const MEMBERSHIP_TEXTS_VERSION = '2026-10-18';
+const MEMBERSHIP_TEXTS_VERSION = '2026-10-18-2';
 const MEMBERSHIP_CLUB_NAME = 'Bad Oldesloer Bogensport e.V.';
 
 function membership_texts(): array
@@ -36,6 +36,10 @@ function membership_texts(): array
         'erziehungsberechtigt' => 'Ich bin gesetzliche/r Vertreter/in des minderjährigen Antragstellers. Ich stimme dem '
             . 'Beitritt zu und handle als allein Sorgeberechtigte/r oder im Einverständnis mit dem anderen '
             . 'sorgeberechtigten Elternteil. Mir ist bekannt, dass ich für die Beiträge hafte.',
+        // How a minor's membership is managed in easyVerein (one of the two is chosen).
+        'verwaltung_eltern' => 'Ich bin bereits Mitglied. Die Mitgliedschaft meines Kindes soll über meinen '
+            . 'easyVerein-Zugang (E-Mail-Adresse wie unten angegeben) mitverwaltet werden.',
+        'verwaltung_kind' => 'Mein Kind wird allein angemeldet und erhält einen eigenen easyVerein-Zugang.',
         'fotos' => 'Freiwillig: Ich bin damit einverstanden, dass Fotos von mir bzw. meinem Kind, die bei '
             . 'Vereinsveranstaltungen entstehen, auf der Website und in sozialen Medien des Vereins veröffentlicht '
             . 'werden. Diese Einwilligung kann ich jederzeit für die Zukunft widerrufen.',

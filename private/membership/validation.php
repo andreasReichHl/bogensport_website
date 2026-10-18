@@ -14,6 +14,9 @@ require_once __DIR__ . '/texts.php';
 const MEMBERSHIP_SALUTATIONS = ['', 'Herr', 'Frau'];
 const MEMBERSHIP_GENDERS = ['m', 'w', 'd'];
 const MEMBERSHIP_REQUIRED_CONSENTS = ['satzung', 'beitrag', 'datenschutz', 'sepa'];
+// Who manages a minor's membership in easyVerein: linked to the guardian's existing account,
+// or the child gets an account of its own.
+const MEMBERSHIP_MANAGED_BY = ['eltern', 'kind'];
 
 function membership_string(array $source, string $key, int $maxLength = 128): string
 {
@@ -158,6 +161,17 @@ function membership_validate_application(array $input, DateTimeImmutable $now): 
         if (!filter_var($guardian['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['guardian.email'] = 'Bitte eine gültige E-Mail-Adresse des/der Erziehungsberechtigten angeben.';
         }
+
+        // Deliberately NOT checked here whether the guardian really is a member: answering that
+        // would let anyone probe who is in the club. Ownership of the address is proven by the
+        // confirmation mail going there; the easyVerein lookup happens when transferring.
+        $guardian['managedBy'] = in_array($input['managedBy'] ?? null, MEMBERSHIP_MANAGED_BY, true)
+            ? $input['managedBy']
+            : null;
+
+        if ($guardian['managedBy'] === null) {
+            $errors['managedBy'] = 'Bitte auswählen, wie die Mitgliedschaft verwaltet werden soll.';
+        }
     }
 
     $groupId = filter_var($input['groupId'] ?? null, FILTER_VALIDATE_INT);
@@ -210,6 +224,11 @@ function membership_validate_application(array $input, DateTimeImmutable $now): 
             'accepted' => ($consentInput[$consent] ?? false) === true,
             'text' => $texts[$consent],
         ];
+    }
+
+    if ($guardian !== null) {
+        // Keep the wording of the chosen option, like the declarations.
+        $guardian['managedByText'] = $texts['verwaltung_' . $guardian['managedBy']];
     }
 
     return [[

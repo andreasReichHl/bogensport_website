@@ -17,6 +17,10 @@ class MembershipRateLimitException extends RuntimeException
 {
 }
 
+class MembershipDuplicateException extends RuntimeException
+{
+}
+
 function membership_ensure_applications_table(): void
 {
     static $ensured = false;
@@ -32,6 +36,7 @@ function membership_ensure_applications_table(): void
           status ENUM('pending', 'confirmed', 'synced', 'sync_failed') NOT NULL DEFAULT 'pending',
           data_encrypted MEDIUMBLOB NOT NULL,
           email_hash CHAR(64) NOT NULL,
+          person_hash CHAR(64) NOT NULL,
           confirm_token_hash CHAR(64) NULL UNIQUE,
           confirm_expires_at DATETIME NOT NULL,
           submitted_at DATETIME NOT NULL,
@@ -49,7 +54,8 @@ function membership_ensure_applications_table(): void
           updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           INDEX idx_membership_applications_status (status, confirm_expires_at),
           INDEX idx_membership_applications_ip (submitted_ip, submitted_at),
-          INDEX idx_membership_applications_email (email_hash, submitted_at)
+          INDEX idx_membership_applications_email (email_hash, submitted_at),
+          INDEX idx_membership_applications_person (person_hash)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     );
     $ensured = true;
@@ -87,6 +93,39 @@ function membership_email_hash(string $email): string
 function membership_db_time(DateTimeImmutable $time): string
 {
     return $time->format('Y-m-d H:i:s');
+}
+
+/**
+ * Fingerprint of "this person, applied via this address" (keyed, not reversible) - lets us
+ * detect a repeated application although the application data itself is encrypted.
+ */
+function membership_person_hash(array $application, string $confirmationEmail): string
+{
+    $applicant = $application['applicant'];
+    $key = implode('|', [
+        'person',
+        mb_strtolower($confirmationEmail),
+        mb_strtolower($applicant['firstName']),
+        mb_strtolower($applicant['lastName']),
+        $applicant['dateOfBirth'],
+    ]);
+
+    return hash_hmac('sha256', $key, membership_config_key('signature_key'));
+}
+
+/**
+ * Rejects a second application for the same person while the first one is still in the
+ * system (pending, confirmed, being transferred). The same address for several family members
+ * is fine - only name + date of birth + address together count as the same person.
+ */
+function membership_assert_not_duplicate(string $personHash): void
+{
+    $statement = member_area_db()->prepare('SELECT 1 FROM membership_applications WHERE person_hash = ? LIMIT 1');
+    $statement->execute([$personHash]);
+
+    if ($statement->fetchColumn() !== false) {
+        throw new MembershipDuplicateException('An application for this person already exists');
+    }
 }
 
 function membership_delete_expired_pending(DateTimeImmutable $now): void
@@ -144,6 +183,8 @@ function membership_store_application(
     membership_delete_expired_pending($now);
 
     $emailHash = membership_email_hash($confirmationEmail);
+    $personHash = membership_person_hash($application, $confirmationEmail);
+    membership_assert_not_duplicate($personHash);
     membership_assert_rate_limit($ip, $emailHash, $now);
 
     $token = bin2hex(random_bytes(32));
@@ -152,9 +193,9 @@ function membership_store_application(
 
     $statement = member_area_db()->prepare(
         'INSERT INTO membership_applications
-           (reference, data_encrypted, email_hash, confirm_token_hash, confirm_expires_at,
+           (reference, data_encrypted, email_hash, person_hash, confirm_token_hash, confirm_expires_at,
             submitted_at, submitted_ip, submitted_user_agent)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
 
     for ($attempt = 1; ; $attempt++) {
@@ -165,6 +206,7 @@ function membership_store_application(
                 $reference,
                 $encrypted,
                 $emailHash,
+                $personHash,
                 hash('sha256', $token),
                 membership_db_time($expiresAt),
                 membership_db_time($now),

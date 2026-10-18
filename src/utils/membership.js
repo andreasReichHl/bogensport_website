@@ -51,7 +51,7 @@ export async function fetchMembershipForm() {
 }
 
 /**
- * @returns {Promise<{status: "ok"} | {status: "invalid", errors: object} | {status: "rate_limited"} | {status: "error"}>}
+ * @returns {Promise<{status: "ok"} | {status: "invalid", errors: object} | {status: "duplicate"} | {status: "rate_limited"} | {status: "error"}>}
  */
 export async function submitMembershipApplication(payload) {
   let response;
@@ -73,6 +73,10 @@ export async function submitMembershipApplication(payload) {
   if (response.status === 422) {
     const body = await response.json().catch(() => ({}));
     return { status: "invalid", errors: body.errors ?? {} };
+  }
+
+  if (response.status === 409) {
+    return { status: "duplicate" };
   }
 
   if (response.status === 429) {

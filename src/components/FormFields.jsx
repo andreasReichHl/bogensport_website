@@ -10,13 +10,14 @@ export function SectionTitle({number, children}) {
     );
 }
 
-export function Field({label, required, error, children}) {
+export function Field({label, required, error, hint, children}) {
     return (
         <label className="block">
       <span className="mb-2 block text-sm font-semibold text-slate-700">
         {label} {required && <span aria-hidden="true">*</span>}
       </span>
             {children}
+            {hint && !error && <span className="mt-1 block text-sm text-slate-500">{hint}</span>}
             {error && <span className="mt-1 block text-sm text-red-700">{error}</span>}
         </label>
     );
