@@ -45,14 +45,20 @@ return array (
       545587002 => 0.00,  // Passive Mitglieder (Aufnahmegebühr entfällt)
     ),
     'creditor_id' => '',
+    // Vite dev server; links in mails point here locally.
+    'site_url' => 'http://localhost:5173',
     'board_email' => 'beitritt@badoldesloer-bogensport.de',
+    // Locally: Mailpit from docker-compose (no auth, no TLS) - mails show up at
+    // http://localhost:8025 instead of being delivered. Production: the real SMTP account of
+    // beitritt@badoldesloer-bogensport.de with 'smtp_secure' => 'tls' (port 587) or 'ssl' (465).
     'mail' => 
     array (
       'from' => 'beitritt@badoldesloer-bogensport.de',
       'from_name' => 'Bad Oldesloer Bogensport e.V.',
-      'smtp_host' => '',
-      'smtp_port' => 587,
-      'smtp_user' => 'beitritt@badoldesloer-bogensport.de',
+      'smtp_host' => '127.0.0.1',
+      'smtp_port' => 1025,
+      'smtp_secure' => '',
+      'smtp_user' => '',
       'smtp_password' => '',
     ),
   ),

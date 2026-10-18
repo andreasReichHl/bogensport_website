@@ -38,6 +38,8 @@ function membership_config(): array
         // accidentally show up without a fee. 0 means "entfällt".
         'admission_fees' => array_map('floatval', $raw['admission_fees'] ?? []),
         'creditor_id' => (string)($raw['creditor_id'] ?? ''),
+        // Public base URL of the website, used for links in mails (no trailing slash).
+        'site_url' => (string)($raw['site_url'] ?? 'https://badoldesloer-bogensport.de'),
         'board_email' => (string)($raw['board_email'] ?? ''),
         'mail' => $raw['mail'] ?? [],
     ];
@@ -58,4 +60,13 @@ function membership_config_key(string $name): string
     }
 
     return $key;
+}
+
+/**
+ * All membership timestamps are German local time - both stored in the DB and shown to people -
+ * independent of the server's PHP default time zone.
+ */
+function membership_timezone(): DateTimeZone
+{
+    return new DateTimeZone('Europe/Berlin');
 }

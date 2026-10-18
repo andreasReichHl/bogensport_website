@@ -19,5 +19,15 @@ services:
       retries: 10
       start_period: 30s
 
+  # Local mail catcher for the online membership application: SMTP on 1025, web UI on
+  # http://localhost:8025. Nothing is delivered to real addresses.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: bogensport-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   bogensport_mysql_data:

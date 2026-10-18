@@ -20,11 +20,8 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
-      '/beitritt-formular.php': {
-        target: 'http://127.0.0.1:8000',
-        changeOrigin: true,
-      },
-      '/beitritt-absenden.php': {
+      // Online-Mitgliedsbeitritt: beitritt-formular/-absenden/-pruefen/-bestaetigen.php
+      '^/beitritt-[a-z]+\\.php': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },

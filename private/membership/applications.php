@@ -181,3 +181,63 @@ function membership_store_application(
         }
     }
 }
+
+function membership_delete_application(string $reference): void
+{
+    member_area_db()->prepare('DELETE FROM membership_applications WHERE reference = ?')->execute([$reference]);
+}
+
+/**
+ * Looks an application up by the plain confirmation token from the mail link.
+ * Returns null if the token is unknown or the (still pending) application has expired.
+ */
+function membership_find_by_token(string $token, DateTimeImmutable $now): ?array
+{
+    if (!preg_match('/^[0-9a-f]{64}$/', $token)) {
+        return null;
+    }
+
+    membership_ensure_applications_table();
+    $statement = member_area_db()->prepare(
+        'SELECT id, reference, status, data_encrypted, confirm_expires_at, submitted_at, confirmed_at
+         FROM membership_applications WHERE confirm_token_hash = ? LIMIT 1'
+    );
+    $statement->execute([hash('sha256', $token)]);
+    $row = $statement->fetch();
+
+    if ($row === false) {
+        return null;
+    }
+
+    if ($row['status'] === 'pending' && $row['confirm_expires_at'] < membership_db_time($now)) {
+        return null;
+    }
+
+    $row['data'] = membership_decrypt($row['data_encrypted']);
+    unset($row['data_encrypted']);
+
+    return $row;
+}
+
+/**
+ * Marks a pending application as confirmed and records the proof (time, IP, user agent).
+ * Returns false if it was already confirmed or has expired in the meantime - the conditional
+ * UPDATE makes a double click (or two tabs) confirm only once.
+ */
+function membership_confirm_application(int $id, string $ip, string $userAgent, DateTimeImmutable $now): bool
+{
+    $statement = member_area_db()->prepare(
+        "UPDATE membership_applications
+         SET status = 'confirmed', confirmed_at = ?, confirmed_ip = ?, confirmed_user_agent = ?
+         WHERE id = ? AND status = 'pending' AND confirm_expires_at >= ?"
+    );
+    $statement->execute([
+        membership_db_time($now),
+        $ip,
+        mb_substr($userAgent, 0, 255),
+        $id,
+        membership_db_time($now),
+    ]);
+
+    return $statement->rowCount() === 1;
+}

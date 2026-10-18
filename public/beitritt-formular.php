@@ -8,9 +8,9 @@
 require_once __DIR__ . '/mitglieder/bootstrap.php';
 require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/groups.php';
 require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/texts.php';
+require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/http.php';
 
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
+membership_json_headers();
 
 try {
     echo json_encode(

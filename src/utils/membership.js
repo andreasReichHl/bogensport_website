@@ -81,3 +81,42 @@ export async function submitMembershipApplication(payload) {
 
   return { status: "error" };
 }
+
+/**
+ * @returns {Promise<{status: "pending"|"confirmed", reference: string, applicantName: string, isMinor: boolean,
+ *   group: object, ibanMasked: string, expiresAt: string} | {status: "invalid"} | {status: "error"}>}
+ */
+export async function fetchMembershipConfirmation(token) {
+  try {
+    const response = await fetch(`/beitritt-pruefen.php?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+
+    if (response.status === 404) {
+      return { status: "invalid" };
+    }
+
+    return response.ok ? await response.json() : { status: "error" };
+  } catch {
+    return { status: "error" };
+  }
+}
+
+/**
+ * @returns {Promise<{status: "confirmed"|"already_confirmed", reference: string} | {status: "invalid"} | {status: "error"}>}
+ */
+export async function confirmMembershipApplication(token) {
+  try {
+    const response = await fetch("/beitritt-bestaetigen.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+    if (response.status === 404) {
+      return { status: "invalid" };
+    }
+
+    return response.ok ? await response.json() : { status: "error" };
+  } catch {
+    return { status: "error" };
+  }
+}
