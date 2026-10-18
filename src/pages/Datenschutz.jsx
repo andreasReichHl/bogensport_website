@@ -124,6 +124,66 @@ export default function Datenschutz() {
 
           <section>
             <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
+              Mitgliederverwaltung mit easyVerein
+            </h2>
+            <h3 className="mb-2 font-heading text-lg font-semibold text-slate-950">Was ist easyVerein?</h3>
+            <p>
+              Für die Verwaltung unserer Mitglieder nutzen wir{" "}
+              <a
+                className="text-[#002f5f] underline underline-offset-4 hover:no-underline"
+                href="https://easyverein.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                easyVerein
+              </a>
+              , eine Online-Software für Vereine. Damit führen wir unsere Mitgliederliste, verwalten Mitgliedschaften
+              und Beiträge, ziehen Beiträge per SEPA-Lastschrift ein und pflegen unsere Vereinstermine. Anbieter ist die
+              SD Software-Design GmbH, Basler Landstraße 8, 79111 Freiburg im Breisgau.
+            </p>
+            <h3 className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Welche Daten und wozu</h3>
+            <p>
+              Gespeichert werden die Daten, die für die Mitgliedschaft erforderlich sind, insbesondere Name, Anschrift,
+              Geburtsdatum, Kontaktdaten, Mitgliedsart, Bankverbindung für den Lastschrifteinzug sowie bei
+              Minderjährigen die Angaben der Erziehungsberechtigten. Rechtsgrundlage ist die Durchführung der
+              Mitgliedschaft gemäß Art. 6 Abs. 1 lit. b DSGVO.
+            </p>
+            <h3 className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Auftragsverarbeitung</h3>
+            <p>
+              easyVerein verarbeitet die Daten ausschließlich in unserem Auftrag und nach unseren Weisungen. Mit dem
+              Anbieter besteht ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO. Die Server von easyVerein
+              stehen nach Angaben des Anbieters ausschließlich in Deutschland.
+            </p>
+            <p className="mt-4">
+              Wenn Sie auf unserer Website einen Termin in Ihren Kalender übernehmen oder unseren Terminkalender
+              abonnieren, werden die Kalenderdaten direkt von easyVerein abgerufen; dabei wird Ihre IP-Adresse an
+              easyVerein übermittelt.
+            </p>
+            <p className="mt-4">
+              Weitere Informationen:{" "}
+              <a
+                className="text-[#002f5f] underline underline-offset-4 hover:no-underline"
+                href="https://easyverein.com/vereinssoftware/sicherheit-und-datenschutz/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Sicherheit und Datenschutz bei easyVerein
+              </a>{" "}
+              und{" "}
+              <a
+                className="text-[#002f5f] underline underline-offset-4 hover:no-underline"
+                href="https://software-design.de/agentur/datenschutz?domain=easyverein.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Datenschutzerklärung des Anbieters
+              </a>
+              .
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Kontaktaufnahme per E-Mail
             </h2>
             <h3 className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</h3>
