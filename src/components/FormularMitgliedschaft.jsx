@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import {Field, inputClass, SectionTitle} from "./FormFields.jsx";
-import SatzungContent from "./SatzungContent.jsx";
+import SatzungDialog from "./SatzungDialog.jsx";
 import {satzungMeta} from "../data/satzung.js";
 import {ageOn, fetchMembershipForm, formatEuro, formatInterval, submitMembershipApplication} from "../utils/membership.js";
 import {downloadLinks} from "../utils/siteLinks.js";
@@ -25,6 +25,25 @@ const emptyValues = {
     consents: {satzung: false, beitrag: false, datenschutz: false, sepa: false, erziehungsberechtigt: false, fotos: false},
     website: "",
 };
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Whether all required fields are filled and all required declarations ticked - only enables
+ * the submit button. The server validates everything again (incl. IBAN check digits).
+ */
+function isFormComplete(values, isMinor) {
+    const {applicant, guardian, bank, consents} = values;
+    const filled = (...fields) => fields.every((field) => field.trim() !== "");
+
+    return filled(values.groupId, applicant.firstName, applicant.lastName, applicant.dateOfBirth, applicant.gender,
+            applicant.street, applicant.city, bank.accountHolder, bank.iban)
+        && /^\d{5}$/.test(applicant.zip)
+        && (isMinor ? applicant.email === "" || emailPattern.test(applicant.email) : emailPattern.test(applicant.email))
+        && (!isMinor || (filled(guardian.firstName, guardian.lastName) && emailPattern.test(guardian.email)))
+        && consents.satzung && consents.beitrag && consents.datenschutz && consents.sepa
+        && (!isMinor || consents.erziehungsberechtigt);
+}
 
 const paperApplicationLink = downloadLinks.find((link) => link.label === "Mitgliedsantrag");
 
@@ -132,6 +151,7 @@ export default function FormularMitgliedschaft() {
     const isMinor = age !== null && age < 18;
     const selectedGroup = config?.groups.find((group) => String(group.id) === values.groupId) ?? null;
     const confirmationEmail = isMinor ? values.guardian.email : values.applicant.email;
+    const canSubmit = isFormComplete(values, isMinor) && submissionState !== "submitting";
 
     function setValue(section, key, value) {
         setValues((current) => ({...current, [section]: {...current[section], [key]: value}}));
@@ -364,34 +384,17 @@ export default function FormularMitgliedschaft() {
 
                         <div className="space-y-8 lg:pl-8">
                             <section>
-                                <SectionTitle number="4">Satzung</SectionTitle>
-                                <div
-                                    className="max-h-80 overflow-y-auto rounded-md border border-slate-300 bg-white p-4 text-sm"
-                                    tabIndex={0}
-                                    aria-label="Satzung"
-                                >
-                                    <SatzungContent headingLevel="h3"/>
-                                </div>
-                                <p className="mt-2 text-sm text-slate-500">
-                                    <Link className="text-blue-700 hover:underline" to="/satzung" target="_blank">
-                                        Satzung in neuem Tab öffnen
-                                    </Link>
-                                </p>
-                                <div className="mt-4 text-sm text-slate-700">
+                                <SectionTitle number="4">Erklärungen</SectionTitle>
+                                <div className="space-y-4 text-sm text-slate-700">
                                     <Consent
                                         checked={values.consents.satzung}
                                         onChange={(checked) => setValue("consents", "satzung", checked)}
                                         required
                                         error={errors["consents.satzung"]}
                                     >
-                                        {texts.satzung}
+                                        {texts.satzung}{" "}
+                                        <SatzungDialog/>
                                     </Consent>
-                                </div>
-                            </section>
-
-                            <section className="border-t border-slate-200 pt-8">
-                                <SectionTitle number="5">Erklärungen</SectionTitle>
-                                <div className="space-y-4 text-sm text-slate-700">
                                     <Consent
                                         checked={values.consents.beitrag}
                                         onChange={(checked) => setValue("consents", "beitrag", checked)}
@@ -473,12 +476,18 @@ export default function FormularMitgliedschaft() {
                         )}
                         <button
                             type="submit"
-                            disabled={submissionState === "submitting"}
+                            disabled={!canSubmit}
                             className="font-heading flex h-11 w-full items-center justify-center gap-3 rounded-md bg-blue-600 px-8 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
                         >
                             {submissionState === "submitting" ? "Wird gesendet ..." : "Mitgliedschaft verbindlich beantragen"}
                             {submissionState !== "submitting" && <span aria-hidden="true">→</span>}
                         </button>
+                        {!canSubmit && submissionState !== "submitting" && (
+                            <p className="mt-4 text-sm text-slate-500">
+                                Bitte fülle alle Pflichtfelder aus und bestätige die Pflicht-Erklärungen, um den Antrag
+                                abzusenden.
+                            </p>
+                        )}
                         {submissionState === "rate_limited" && (
                             <p className="mt-4 text-sm font-semibold text-red-700">
                                 Es wurden zu viele Anträge gesendet. Bitte versuche es später erneut.
