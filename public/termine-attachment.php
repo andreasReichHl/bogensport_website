@@ -94,10 +94,17 @@ try {
     easyverein_termine_attachment_reject(502);
 }
 
-$contentType = $response['headers']['content-type'] ?? 'application/octet-stream';
+// The file is served from our own origin, so only render types inline that cannot carry
+// script (PDF and raster images). Anything else - e.g. an HTML or SVG file uploaded as
+// "Anhang" in easyVerein - is forced to download instead of executing on our domain.
+$inlineContentTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+$upstreamContentType = strtolower(trim(explode(';', (string)($response['headers']['content-type'] ?? ''))[0]));
+$isInline = in_array($upstreamContentType, $inlineContentTypes, true);
+$contentType = $isInline ? $upstreamContentType : 'application/octet-stream';
 $filename = easyverein_termine_attachment_filename($fileUrl);
 
 header('Content-Type: ' . $contentType);
-header('Content-Disposition: inline; filename="' . $filename . '"');
+header('Content-Disposition: ' . ($isInline ? 'inline' : 'attachment') . '; filename="' . $filename . '"');
+header('X-Content-Type-Options: nosniff');
 header('Cache-Control: public, max-age=3600');
 echo $response['body'];
