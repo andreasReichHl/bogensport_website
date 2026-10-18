@@ -172,7 +172,7 @@ export default function FormularMitgliedschaft() {
 
     if (configState === "loading") {
         return (
-            <section className="bg-slate-50 px-5 pb-14 sm:px-8 lg:px-12">
+            <section className="bg-slate-50 px-5 pt-10 pb-14 sm:px-8 sm:pt-14 lg:px-12">
                 <p className="p-5 text-sm text-slate-500 sm:p-8">Formular wird geladen ...</p>
             </section>
         );
@@ -181,7 +181,7 @@ export default function FormularMitgliedschaft() {
     if (configState === "error" || config.groups.length === 0) {
         return (
             <section className="bg-slate-50">
-                <div className="mx-auto max-w-3xl px-5 pb-14 sm:px-8 lg:pb-20">
+                <div className="mx-auto max-w-3xl px-5 pt-10 pb-14 sm:px-8 sm:pt-14 lg:pb-20">
                     <Notice title="Online-Beitritt derzeit nicht möglich">
                         <p>Das Beitrittsformular ist gerade nicht verfügbar. Bitte versuche es später erneut.</p>
                         <PaperApplicationHint/>
@@ -194,7 +194,7 @@ export default function FormularMitgliedschaft() {
     if (submissionState === "success") {
         return (
             <section className="bg-slate-50">
-                <div className="mx-auto max-w-3xl px-5 pb-14 sm:px-8 lg:pb-20">
+                <div className="mx-auto max-w-3xl px-5 pt-10 pb-14 sm:px-8 sm:pt-14 lg:pb-20">
                     <Notice title="Fast geschafft – bitte E-Mail bestätigen">
                         <p>
                             Wir haben eine E-Mail an <strong>{confirmationEmail}</strong> geschickt. Bitte klicke auf den
