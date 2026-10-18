@@ -97,7 +97,7 @@ function NewsGallery({ images, title }) {
   return (
     <figure className="mb-8 w-full sm:mb-12">
       <div
-        className={`relative aspect-[16/9] overflow-hidden rounded-lg bg-slate-100 ${
+        className={`relative aspect-video overflow-hidden rounded-lg bg-slate-100 ${
           hasMultipleImages ? "cursor-pointer" : ""
         }`}
         onClick={handleImageClick}
@@ -135,7 +135,7 @@ function NewsGallery({ images, title }) {
           <>
             <button
               type="button"
-              className="absolute inset-y-0 left-0 z-10 flex w-24 cursor-w-resize items-center justify-start bg-gradient-to-r from-black/35 via-black/10 to-transparent px-3 opacity-0 transition-opacity duration-200 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none sm:w-32 sm:px-4"
+              className="absolute inset-y-0 left-0 z-10 flex w-24 cursor-w-resize items-center justify-start bg-linear-to-r from-black/35 via-black/10 to-transparent px-3 opacity-0 transition-opacity duration-200 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none sm:w-32 sm:px-4"
               aria-label="Vorheriges Bild anzeigen"
               onClick={() => {
                 handleEdgeClick(showPrevious);
@@ -150,7 +150,7 @@ function NewsGallery({ images, title }) {
             </button>
             <button
               type="button"
-              className="absolute inset-y-0 right-0 z-10 flex w-24 cursor-e-resize items-center justify-end bg-gradient-to-l from-black/35 via-black/10 to-transparent px-3 opacity-0 transition-opacity duration-200 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none sm:w-32 sm:px-4"
+              className="absolute inset-y-0 right-0 z-10 flex w-24 cursor-e-resize items-center justify-end bg-linear-to-l from-black/35 via-black/10 to-transparent px-3 opacity-0 transition-opacity duration-200 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none sm:w-32 sm:px-4"
               aria-label="Nächstes Bild anzeigen"
               onClick={() => {
                 handleEdgeClick(showNext);
@@ -174,7 +174,7 @@ function NewsGallery({ images, title }) {
               <button
                 key={`${imagePath}-dot-${index}`}
                 type="button"
-                className={`h-2 rounded-full border transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
+                className={`h-2 rounded-full border transition-all duration-300 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
                   index === activeIndex
                     ? "w-7 border-blue-500 bg-blue-500/90"
                     : "w-2 border-slate-300 bg-slate-200/80 hover:border-slate-400 hover:bg-slate-300"
@@ -283,7 +283,7 @@ export default function NewsDetail() {
           <Link className="font-heading text-sm font-bold text-blue-700" to="/">
             Zurück zur Startseite
           </Link>
-          <h1 className="mt-5 break-words font-heading text-3xl font-bold leading-tight text-[#002f5f] sm:mt-6 sm:text-5xl">
+          <h1 className="mt-5 wrap-break-word font-heading text-3xl font-bold leading-tight text-[#002f5f] sm:mt-6 sm:text-5xl">
             {post.title}
           </h1>
           {post.created_at && (
@@ -292,7 +292,7 @@ export default function NewsDetail() {
             </p>
           )}
           <div
-            className="news-content mt-7 min-w-0 break-words sm:mt-8"
+            className="news-content mt-7 min-w-0 wrap-break-word sm:mt-8"
             dangerouslySetInnerHTML={{ __html: post.body_html }}
           />
           <div className="mt-8 lg:hidden">

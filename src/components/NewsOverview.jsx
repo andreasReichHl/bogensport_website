@@ -43,7 +43,7 @@ export default function NewsOverview() {
               {post.image_path && (
                 <div className="p-4 pb-0">
                   <FadeInImage
-                    wrapperClassName="aspect-[16/9] rounded-md bg-slate-100"
+                    wrapperClassName="aspect-video rounded-md bg-slate-100"
                     className="h-full w-full object-cover"
                     src={post.image_path}
                     alt=""
