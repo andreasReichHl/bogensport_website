@@ -1,4 +1,5 @@
 import {useState} from "react";
+import DatenschutzDialog from "./DatenschutzDialog.jsx";
 import {Field, inputClass, SectionTitle, textareaClass} from "./FormFields.jsx";
 
 const experienceLevels = ["Keine Erfahrung", "Ein wenig Erfahrung", "Fortgeschritten"];
@@ -227,10 +228,7 @@ export default function FormularProbetraining() {
                                                required/>
                                         <span>
                       Ich akzeptiere die{" "}
-                                            <a className="font-semibold text-blue-700 hover:underline"
-                                               href="/datenschutz">
-                        Datenschutzerklärung
-                      </a>
+                                            <DatenschutzDialog startAt={null}/>
                       . *
                     </span>
                                     </label>

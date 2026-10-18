@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from "react";
-import {Link} from "react-router-dom";
 import {Field, inputClass, SectionTitle} from "./FormFields.jsx";
 import Notice from "./Notice.jsx";
+import DatenschutzDialog from "./DatenschutzDialog.jsx";
 import SatzungDialog from "./SatzungDialog.jsx";
 import {satzungMeta} from "../data/satzung.js";
 import {
@@ -574,10 +574,7 @@ export default function FormularMitgliedschaft() {
                                         error={errors["consents.datenschutz"]}
                                     >
                                         {texts.datenschutz}{" "}
-                                        <Link className="font-semibold text-blue-700 hover:underline" to="/datenschutz#online-mitgliedsantrag"
-                                              target="_blank">
-                                            Datenschutzerklärung
-                                        </Link>
+                                        <DatenschutzDialog/>
                                     </Consent>
                                     {needsGuardian && (
                                         <Consent
