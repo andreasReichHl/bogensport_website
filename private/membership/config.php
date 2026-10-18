@@ -37,7 +37,7 @@ function membership_config(): array
         // without an entry are NOT offered in the form, so a group ticked in easyVerein can't
         // accidentally show up without a fee. 0 means "entfällt".
         'admission_fees' => array_map('floatval', $raw['admission_fees'] ?? []),
-        'creditor_id' => (string)($raw['creditor_id'] ?? ''),
+        'creditor_id' => (string)($raw['creditor_id'] ?? 'DE66ZZZ00001047545'),
         // Public base URL of the website, used for links in mails (no trailing slash).
         'site_url' => (string)($raw['site_url'] ?? 'https://badoldesloer-bogensport.de'),
         'board_email' => (string)($raw['board_email'] ?? ''),
@@ -50,8 +50,8 @@ function membership_config(): array
             ? ($raw['easyverein_sync'] ?? 'off')
             : 'off',
         // After this many failed transfer attempts the application is marked sync_failed and
-        // the board is alerted.
-        'sync_max_attempts' => (int)($raw['sync_max_attempts'] ?? 5),
+        // the board is alerted. The cron job runs only daily on Strato, so keep this small.
+        'sync_max_attempts' => (int)($raw['sync_max_attempts'] ?? 3),
         // Days after the successful transfer until the local copy is deleted (the PDF and all
         // data are then only in easyVerein). Unconfirmed applications: confirm_ttl_hours.
         'retention_days' => (int)($raw['retention_days'] ?? 90),

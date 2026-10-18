@@ -11,7 +11,7 @@
 
 require_once __DIR__ . '/config.php';
 
-const MEMBERSHIP_TEXTS_VERSION = '2026-10-18-4';
+const MEMBERSHIP_TEXTS_VERSION = '2026-10-18-5';
 const MEMBERSHIP_CLUB_NAME = 'Bad Oldesloer Bogensport e.V.';
 
 function membership_texts(): array
