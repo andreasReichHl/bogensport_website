@@ -54,8 +54,9 @@ return array (
     'sync_max_attempts' => 5,
     'retention_days' => 90,
     // Locally: Mailpit from docker-compose (no auth, no TLS) - mails show up at
-    // http://localhost:8025 instead of being delivered. Production: the real SMTP account of
-    // beitritt@badoldesloer-bogensport.de with 'smtp_secure' => 'tls' (port 587) or 'ssl' (465).
+    // http://localhost:8025 instead of being delivered. Production: the Strato mailbox
+    // beitritt@badoldesloer-bogensport.de - 'smtp_host' => 'smtp.strato.de', 'smtp_port' => 465,
+    // 'smtp_secure' => 'ssl', 'smtp_user' => the full address, 'smtp_password' => its password.
     'mail' => 
     array (
       'from' => 'beitritt@badoldesloer-bogensport.de',
