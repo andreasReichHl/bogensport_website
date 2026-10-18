@@ -67,3 +67,29 @@ CREATE TABLE IF NOT EXISTS easyverein_tokens (
   refreshed_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS membership_applications (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  reference VARCHAR(20) NOT NULL UNIQUE,
+  status ENUM('pending', 'confirmed', 'synced', 'sync_failed') NOT NULL DEFAULT 'pending',
+  data_encrypted MEDIUMBLOB NOT NULL,
+  email_hash CHAR(64) NOT NULL,
+  confirm_token_hash CHAR(64) NULL UNIQUE,
+  confirm_expires_at DATETIME NOT NULL,
+  submitted_at DATETIME NOT NULL,
+  submitted_ip VARCHAR(45) NOT NULL,
+  submitted_user_agent VARCHAR(255) NOT NULL DEFAULT '',
+  confirmed_at DATETIME NULL,
+  confirmed_ip VARCHAR(45) NULL,
+  confirmed_user_agent VARCHAR(255) NULL,
+  signature CHAR(64) NULL,
+  easyverein_contact_id BIGINT UNSIGNED NULL,
+  easyverein_member_id BIGINT UNSIGNED NULL,
+  sync_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  last_error VARCHAR(500) NULL,
+  synced_at DATETIME NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_membership_applications_status (status, confirm_expires_at),
+  INDEX idx_membership_applications_ip (submitted_ip, submitted_at),
+  INDEX idx_membership_applications_email (email_hash, submitted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

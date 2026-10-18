@@ -15,6 +15,7 @@ Vereinswebsite mit öffentlichem Auftritt (React) und einem PHP-basierten Mitgli
 - `public/` — Von Vite direkt kopierte statische Dateien + die PHP-Endpunkte (`news-feed.php`, `termine-feed.php`, `termine-attachment.php`, `mitglieder/*.php`)
 - `private/member-area/` — PHP-Backend-Logik des Mitgliederbereichs (Auth, DB-Zugriff, News-Verwaltung). Liegt bewusst außerhalb des Document-Roots.
 - `private/easyverein/` — easyVerein-API-Integration (Token-Verwaltung + generischer API-Client), ebenfalls außerhalb des Document-Roots.
+- `private/membership/` — Online-Mitgliedsbeitritt (Validierung, verschlüsselte Speicherung, Mitgliedsarten aus easyVerein), ebenfalls außerhalb des Document-Roots.
 - `dist/` — Build-Output von `npm run build` (nicht versioniert)
 
 ## Setup
@@ -69,3 +70,13 @@ Login unter `/mitglieder/login.php`. Rollen: `superadmin`, `admin`, `member` (si
 Termine werden live aus dem easyVerein-Kalender **"Turniere"** geladen (`GET /event?calendar=…&is_public=true`), inklusive eines optionalen Anhangs über das Custom Field **"Anhang"**. Beide Namen sind in `public/termine-feed.php` / `public/termine-attachment.php` als Konstanten hinterlegt.
 
 Der API-Token wird automatisch verwaltet (`private/easyverein/token.php`): er liegt in der Tabelle `easyverein_tokens`, wird nach 15 von 30 Tagen Gültigkeit automatisch erneuert (`GET /refresh-token`) und ist race-safe für mehrere gleichzeitige PHP-Worker. Für den allerersten Start (keine Zeile in der Tabelle vorhanden) muss einmalig ein in der easyVerein-Oberfläche (Einstellungen → easyVerein API) generierter Token über die Umgebungsvariable `EASYVEREIN_API_TOKEN` gesetzt werden.
+
+## Online-Mitgliedsbeitritt
+
+Eigenes Beitrittsformular, das ausschließlich die easyVerein-API nutzt (kein easyVerein-Iframe). Ablauf: Formular → Speicherung als `pending` → Bestätigungslink per Mail (Double-Opt-in) → Übertragung an easyVerein als Mitgliedsantrag (`is_application`) + PDF an den Antragsteller.
+
+- `public/beitritt-formular.php` (GET) liefert die Mitgliedsarten und den Wortlaut aller Erklärungen (`private/membership/texts.php`, versioniert über `MEMBERSHIP_TEXTS_VERSION`).
+- `public/beitritt-absenden.php` (POST, JSON) validiert serverseitig und speichert in `membership_applications`. Die Antragsdaten (inkl. IBAN) liegen dort **verschlüsselt** (libsodium); unbestätigte Anträge werden nach `confirm_ttl_hours` gelöscht. Spam-Schutz: Honeypot-Feld + Limits pro IP und E-Mail.
+- **Mitgliedsarten** sind die easyVerein-Gruppen mit der Einstellung „Im Aufnahmeformular anzeigen“ – Auswahl und Beiträge werden also in easyVerein gepflegt (10 Minuten gecacht).
+- **Konfiguration** im Abschnitt `membership` der `config.local.php` (Vorlage: `config.local.example.php`). Für Produktion eigene Schlüssel `data_key` und `signature_key` erzeugen: `php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'`. Geht `data_key` verloren, sind gespeicherte Anträge nicht mehr lesbar.
+- `satzung_version` muss zu `satzungMeta.version` in `src/data/satzung.js` passen, sonst werden Anträge abgelehnt.
