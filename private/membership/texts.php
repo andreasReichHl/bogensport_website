@@ -11,7 +11,7 @@
 
 require_once __DIR__ . '/config.php';
 
-const MEMBERSHIP_TEXTS_VERSION = '2026-10-18-2';
+const MEMBERSHIP_TEXTS_VERSION = '2026-10-18-3';
 const MEMBERSHIP_CLUB_NAME = 'Bad Oldesloer Bogensport e.V.';
 
 function membership_texts(): array
@@ -26,7 +26,7 @@ function membership_texts(): array
             . '(§ 4 Abs. 7 der Satzung). Ferner ist die festgesetzte Aufnahmegebühr zu zahlen. Die Höhe von Beitrag '
             . 'und Aufnahmegebühr richtet sich nach der gewählten Mitgliedsart.',
         'datenschutz' => 'Ich habe die Datenschutzhinweise zur Kenntnis genommen. Meine Angaben werden zur Durchführung '
-            . 'der Mitgliedschaft verarbeitet und in der Vereinsverwaltung easyVerein gespeichert.',
+            . 'der Mitgliedschaft verarbeitet und in der Mitgliederverwaltung des Vereins gespeichert.',
         'sepa' => 'Ich ermächtige den ' . MEMBERSHIP_CLUB_NAME . ' (Gläubiger-Identifikationsnummer ' . $creditorId
             . '), Zahlungen von meinem Konto mittels Lastschrift einzuziehen. Zugleich weise ich mein Kreditinstitut an, '
             . 'die vom ' . MEMBERSHIP_CLUB_NAME . ' auf mein Konto gezogenen Lastschriften einzulösen. '
@@ -37,9 +37,9 @@ function membership_texts(): array
             . 'Beitritt zu und handle als allein Sorgeberechtigte/r oder im Einverständnis mit dem anderen '
             . 'sorgeberechtigten Elternteil. Mir ist bekannt, dass ich für die Beiträge hafte.',
         // How a minor's membership is managed in easyVerein (one of the two is chosen).
-        'verwaltung_eltern' => 'Ich bin bereits Mitglied. Die Mitgliedschaft meines Kindes soll über meinen '
-            . 'easyVerein-Zugang (E-Mail-Adresse wie unten angegeben) mitverwaltet werden.',
-        'verwaltung_kind' => 'Mein Kind wird allein angemeldet und erhält einen eigenen easyVerein-Zugang.',
+        'verwaltung_eltern' => 'Ich bin bereits Mitglied. Die Mitgliedschaft meines Kindes soll zusammen mit meiner '
+            . 'Mitgliedschaft verwaltet werden (unter der unten angegebenen E-Mail-Adresse).',
+        'verwaltung_kind' => 'Mein Kind wird allein angemeldet und erhält eine eigenständige Mitgliedschaft.',
         'fotos' => 'Freiwillig: Ich bin damit einverstanden, dass Fotos von mir bzw. meinem Kind, die bei '
             . 'Vereinsveranstaltungen entstehen, auf der Website und in sozialen Medien des Vereins veröffentlicht '
             . 'werden. Diese Einwilligung kann ich jederzeit für die Zukunft widerrufen.',

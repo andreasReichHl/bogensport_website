@@ -348,7 +348,7 @@ export default function FormularMitgliedschaft() {
                                             <input className={inputClass} required {...bindInput("guardian", "lastName")}/>
                                         </Field>
                                         <Field
-                                            label={values.managedBy === "eltern" ? "E-Mail deines easyVerein-Zugangs" : "E-Mail"}
+                                            label={values.managedBy === "eltern" ? "E-Mail, unter der du bei uns Mitglied bist" : "E-Mail"}
                                             required
                                             error={errors["guardian.email"]}
                                         >
