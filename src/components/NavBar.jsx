@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/bobs_logo_white_old.svg";
 import { siteConfig } from "../utils/siteConfig.js";
-import { downloadLinks, mainNavigationLinks, trialTrainingLink } from "../utils/siteLinks.js";
+import { downloadLinks, mainNavigationLinks } from "../utils/siteLinks.js";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,9 +41,9 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="font-heading relative z-50 bg-[#002f5f] px-4 py-3 text-white shadow-lg sm:px-6 sm:py-4">
-      <div className="flex items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-2 sm:gap-3" aria-label="Zur Startseite">
+    <nav className="font-heading relative z-50 w-full bg-[#002f5f] px-4 py-3 text-white shadow-lg sm:px-6 sm:py-4">
+      <div className="flex min-w-0 items-center justify-between gap-3 sm:gap-4">
+        <Link to="/" className="flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Zur Startseite">
           <span className="block h-9 w-9 shrink-0 overflow-hidden sm:h-10 sm:w-10 lg:h-11 lg:w-11">
             <img
               src={logo}
@@ -51,9 +51,9 @@ export default function Navbar() {
               className="h-full w-auto max-w-none"
             />
           </span>
-          <div className="flex flex-col text-base leading-tight sm:text-lg">
-              <div className="text-sm font-bold tracking-wide">{siteConfig.brandLines[0]}</div>
-              <div className="text-lg tracking-wide">{siteConfig.brandLines[1]}</div>
+          <div className="flex min-w-0 flex-col text-base leading-tight sm:text-lg">
+              <div className="truncate text-sm font-bold tracking-wide">{siteConfig.brandLines[0]}</div>
+              <div className="truncate text-[1.05rem] tracking-wide min-[380px]:text-lg">{siteConfig.brandLines[1]}</div>
           </div>
         </Link>
 
@@ -108,12 +108,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          <Link
-            className="transition hover:text-blue-300"
-            to={trialTrainingLink.to}
-          >
-            {trialTrainingLink.label}
-          </Link>
         </div>
 
         <button
@@ -189,13 +183,6 @@ export default function Navbar() {
             </div>
           )}
         </div>
-        <Link
-          className="border-t border-white/10 py-3 transition hover:text-blue-300"
-          to={trialTrainingLink.to}
-          onClick={() => setIsOpen(false)}
-        >
-          {trialTrainingLink.label}
-        </Link>
       </div>
     </nav>
   );

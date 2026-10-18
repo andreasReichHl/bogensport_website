@@ -1,5 +1,5 @@
 import logoWhite from "../assets/bobs_logo_white_old.svg";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { mailto, siteConfig } from "../utils/siteConfig.js";
 import { downloadLinks, footerNavigationLinks } from "../utils/siteLinks.js";
@@ -14,6 +14,13 @@ function Icon({ children }) {
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const location = useLocation();
+
+  function getLinkClassName(path) {
+    const isActive = location.pathname === path;
+
+    return `transition hover:text-blue-300 active:text-blue-300 ${isActive ? "text-blue-300" : ""}`;
+  }
 
   return (
     <footer className="font-heading bg-[#002f5f] text-white">
@@ -42,9 +49,15 @@ export default function Footer() {
           <ul className="space-y-1 text-sm text-white/85">
             {footerNavigationLinks.map((link) => (
               <li key={link.label}>
-                <Link to={link.to} className="transition hover:text-blue-300">
-                  {link.label}
-                </Link>
+                {link.href ? (
+                  <a href={link.href} className="transition hover:text-blue-300 active:text-blue-300">
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link to={link.to} className={getLinkClassName(link.to)}>
+                    {link.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
@@ -93,7 +106,7 @@ export default function Footer() {
                   <path d="M4 6h16v12H4V6Zm0 1 8 6 8-6" fill="none" stroke="currentColor" strokeWidth="2" />
                 </svg>
               </Icon>
-              <a href={mailto(siteConfig.emails.info)} className="transition hover:text-blue-300">
+              <a href={mailto(siteConfig.emails.info)} className="transition hover:text-blue-300 active:text-blue-300">
                 {siteConfig.emails.info}
               </a>
             </li>
@@ -105,8 +118,8 @@ export default function Footer() {
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-4 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between">
           <p>© {currentYear} Bogensport Bad Oldesloe e.V.</p>
           <div className="flex gap-8">
-            <Link to="/impressum" className="transition hover:text-blue-300">Impressum</Link>
-            <Link to="/datenschutz" className="transition hover:text-blue-300">Datenschutz</Link>
+            <Link to="/impressum" className={getLinkClassName("/impressum")} aria-current={location.pathname === "/impressum" ? "page" : undefined}>Impressum</Link>
+            <Link to="/datenschutz" className={getLinkClassName("/datenschutz")} aria-current={location.pathname === "/datenschutz" ? "page" : undefined}>Datenschutz</Link>
           </div>
         </div>
       </div>

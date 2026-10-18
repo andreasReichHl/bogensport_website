@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CalendarPlus, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { fetchCalendarEvents, fetchUpcomingEvents } from "../utils/calendar.js";
@@ -23,10 +24,31 @@ function sortEventsForOverview(events) {
   return [...upcomingEvents, ...pastEvents];
 }
 
+function closestYear(years, targetYear) {
+  return years.reduce((closest, year) => (
+    Math.abs(year - targetYear) < Math.abs(closest - targetYear) ? year : closest
+  ), years[0]);
+}
+
 export default function UpcomingEvents({ includePast = false, limit, showAllLink = false }) {
   const [events, setEvents] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [status, setStatus] = useState("loading");
+  const [expandedEventIds, setExpandedEventIds] = useState(() => new Set());
+
+  function toggleEventDescription(eventKey) {
+    setExpandedEventIds((previous) => {
+      const next = new Set(previous);
+
+      if (next.has(eventKey)) {
+        next.delete(eventKey);
+      } else {
+        next.add(eventKey);
+      }
+
+      return next;
+    });
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -38,8 +60,19 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
           : await fetchUpcomingEvents();
 
         if (isMounted) {
-          setEvents(limit ? calendarEvents.slice(0, limit) : calendarEvents);
+          const limitedEvents = limit ? calendarEvents.slice(0, limit) : calendarEvents;
+          setEvents(limitedEvents);
           setStatus("success");
+
+          if (includePast && limitedEvents.length > 0) {
+            const availableYears = limitedEvents.map((event) => event.startDate.getFullYear());
+
+            setSelectedYear((currentSelection) => (
+              availableYears.includes(currentSelection)
+                ? currentSelection
+                : closestYear(availableYears, currentSelection)
+            ));
+          }
         }
       } catch {
         if (isMounted) {
@@ -66,8 +99,9 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
   const visibleEvents = includePast
     ? events.filter((event) => event.startDate.getFullYear() === selectedYear)
     : events;
-  const eventYears = new Set(events.map((event) => event.startDate.getFullYear()));
-  const yearOptions = Array.from(eventYears).sort((firstYear, secondYear) => secondYear - firstYear);
+  const yearOptions = [...new Set(events.map((event) => event.startDate.getFullYear()))].sort(
+    (firstYear, secondYear) => firstYear - secondYear
+  );
 
   if (visibleEvents.length === 0 && !includePast) {
     return <p className="mt-5 text-sm text-slate-600">Aktuell sind keine kommenden Termine eingetragen.</p>;
@@ -77,25 +111,20 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
     <div className="mt-5 space-y-5">
       {includePast && (
         <div className="flex flex-wrap gap-2">
-          {yearOptions.map((year) => {
-            const hasEvents = eventYears.has(year);
-
-            return (
-              <button
-                key={year}
-                type="button"
-                disabled={!hasEvents}
-                onClick={() => setSelectedYear(year)}
-                className={`h-10 rounded-md px-4 text-sm font-bold transition ${
-                  selectedYear === year
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
-                } disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:ring-slate-200 disabled:hover:bg-slate-100`}
-              >
-                {year}
-              </button>
-            );
-          })}
+          {yearOptions.map((year) => (
+            <button
+              key={year}
+              type="button"
+              onClick={() => setSelectedYear(year)}
+              className={`h-10 rounded-md px-4 text-sm font-bold transition ${
+                selectedYear === year
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              {year}
+            </button>
+          ))}
         </div>
       )}
 
@@ -106,6 +135,8 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
       {visibleEvents.map((event) => {
         const pastEvent = isPastEvent(event);
         const eventKey = event.id || `${event.title}-${event.startDate.toISOString()}`;
+        const isDescriptionExpanded = expandedEventIds.has(eventKey);
+        const descriptionPanelId = `event-description-${eventKey}`;
 
         return (
           <article
@@ -118,9 +149,27 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
               <div className="text-3xl font-bold">{eventDayFormatter.format(event.startDate)}</div>
               <div className="text-xs font-bold uppercase">{eventMonthFormatter.format(event.startDate)}</div>
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-heading text-base font-bold text-slate-900">{event.title}</h3>
+                {event.description ? (
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 text-left font-heading text-base font-bold text-slate-900 transition hover:text-blue-700"
+                    aria-expanded={isDescriptionExpanded}
+                    aria-controls={descriptionPanelId}
+                    onClick={() => toggleEventDescription(eventKey)}
+                  >
+                    {event.title}
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                        isDescriptionExpanded ? "rotate-180" : ""
+                      }`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                ) : (
+                  <h3 className="font-heading text-base font-bold text-slate-900">{event.title}</h3>
+                )}
                 {pastEvent && (
                   <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-600">
                     Vergangen
@@ -131,17 +180,42 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{event.location}</p>
               )}
               {event.description && (
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">{event.description}</p>
-              )}
-              {event.link && (
-                <a
-                  href={event.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex text-sm font-bold text-blue-700 transition hover:text-blue-900 hover:underline"
+                <div
+                  id={descriptionPanelId}
+                  className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+                    isDescriptionExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                  }`}
                 >
-                  Ausschreibung
-                </a>
+                  <div className="overflow-hidden">
+                    <div
+                      className="mt-2 text-sm leading-relaxed text-slate-600"
+                      dangerouslySetInnerHTML={{ __html: event.description }}
+                    />
+                  </div>
+                </div>
+              )}
+              {(event.attachmentUrl || event.icsUrl) && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+                  {event.attachmentUrl && (
+                    <a
+                      href={event.attachmentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex text-sm font-bold text-blue-700 transition hover:text-blue-900 hover:underline"
+                    >
+                      Ausschreibung
+                    </a>
+                  )}
+                  {event.icsUrl && (
+                    <a
+                      href={event.icsUrl}
+                      className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-700 transition hover:text-blue-900 hover:underline"
+                    >
+                      <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+                      In Kalender speichern
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           </article>

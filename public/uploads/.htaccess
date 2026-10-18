@@ -1,0 +1,14 @@
+# Uploads are images only: never execute or serve scripts from here.
+<FilesMatch "\.(php|php\d|phtml|phar|pl|py|cgi|sh|html?|svg|js)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule !mod_authz_core.c>
+  <FilesMatch "\.(php|php\d|phtml|phar|pl|py|cgi|sh|html?|svg|js)$">
+    Deny from all
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>

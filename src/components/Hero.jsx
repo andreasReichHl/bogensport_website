@@ -1,5 +1,6 @@
 import {Link} from "react-router-dom";
 
+import FadeInImage from "./FadeInImage";
 import bogenplatzImage from "../assets/image_bogenplatz.png";
 
 const defaultActions = [
@@ -59,10 +60,11 @@ export default function Hero({
     return (
         <section className="bg-slate-50">
             <div className="relative h-160 overflow-hidden text-white">
-                <img
+                <FadeInImage
+                    wrapperClassName="absolute inset-0 h-full w-full"
                     src={bogenplatzImage}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover object-center"
+                    className="h-full w-full object-cover object-center"
                     aria-hidden="true"
                 />
                 <div

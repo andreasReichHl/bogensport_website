@@ -55,7 +55,7 @@ export default function Datenschutz() {
             </p>
             <p className="mt-4">
               Sie können sich jederzeit mit einer Beschwerde an eine Aufsichtsbehörde wenden, z. B. an die zuständige
-              Aufsichtsbehörde des Bundeslands Ihres Wohnsitzes oder an die für uns als verantwortliche Stelle
+              Aufsichtsbehörde des Bundeslandes Ihres Wohnsitzes oder an die für uns als verantwortliche Stelle
               zuständige Behörde.
             </p>
             <p className="mt-4">
