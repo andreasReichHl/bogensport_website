@@ -128,7 +128,9 @@ function membership_contact_payload(array $row): array
 
     $note[] = 'Prüfsumme: ' . $row['signature'];
 
-    return [
+    // Empty optional values are left out instead of sent as "" - e.g. salutation only accepts
+    // "Herr" or "Frau".
+    return array_filter([
         'first_name' => $applicant['firstName'],
         'family_name' => $applicant['lastName'],
         'salutation' => $applicant['salutation'],
@@ -150,7 +152,7 @@ function membership_contact_payload(array $row): array
         'sepa_mandate' => membership_mandate_reference($row['reference']),
         'sepa_date' => substr((string)$row['confirmed_at'], 0, 10),
         'internal_note' => implode("\n", $note),
-    ];
+    ], static fn(mixed $value): bool => $value !== '' && $value !== null);
 }
 
 function membership_member_payload(array $row, int $contactId, string $login, ?int $parentMemberId): array
