@@ -4,6 +4,7 @@
  * Maintenance of online membership applications - run regularly (e.g. hourly) as a cron job:
  *
  *   php private/membership/cron.php            retry open steps (mails, easyVerein transfer),
+ *                                              follow up on the board's decision in easyVerein,
  *                                              delete expired and outdated applications
  *   php private/membership/cron.php status     list all stored applications (no personal data)
  *   php private/membership/cron.php retry OM-2026-XXXXXX
@@ -15,7 +16,7 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
-require_once __DIR__ . '/process.php';
+require_once __DIR__ . '/decision.php';
 
 membership_ensure_applications_table();
 $now = new DateTimeImmutable('now', membership_timezone());
@@ -93,7 +94,20 @@ foreach ($open as $application) {
     echo $application['reference'] . ': ' . ($failed === [] ? 'erledigt' : 'offen: ' . implode(', ', $failed)) . "\n";
 }
 
-// 3. Retention: the local copy is deleted retention_days after the transfer - from then on the
+// 3. Board decisions in easyVerein (no webhooks - we have to ask): welcome mail on acceptance,
+//    local copy deleted on any decision.
+if (membership_config()['easyverein_sync'] === 'live') {
+    try {
+        foreach (membership_follow_up_decisions() as $line) {
+            echo $line . "\n";
+        }
+    } catch (EasyvereinTokenException | EasyvereinApiException $error) {
+        error_log('cron.php: checking decisions failed: ' . $error->getMessage());
+        echo "Entscheidungen konnten nicht abgefragt werden: {$error->getMessage()}\n";
+    }
+}
+
+// 4. Retention (upper limit, if the board hasn't decided): the local copy is deleted retention_days after the transfer - from then on the
 //    application (incl. PDF) exists only in easyVerein. With the transfer switched off, the
 //    deadline counts from the confirmation and the board has the PDF from its mail.
 $cutoff = membership_db_time($now->modify('-' . membership_config()['retention_days'] . ' days'));
