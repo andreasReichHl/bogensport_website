@@ -122,6 +122,10 @@ function membership_send_applicant_pdf_mail(array $row, array $pdf): void
 
     if ($data['isMinor']) {
         $guardian = $data['guardian'];
+        $parentHint = $guardian['managedBy'] === 'eltern'
+            ? "\n\nHaben Sie Ihren eigenen Mitgliedsantrag erst kürzlich gestellt, entscheidet der Vorstand über\n"
+                . 'diesen Antrag, sobald Ihr eigener Antrag angenommen ist.'
+            : '';
         $body = <<<TEXT
             Hallo {$guardian['firstName']} {$guardian['lastName']},
 
@@ -129,7 +133,9 @@ function membership_send_applicant_pdf_mail(array $row, array $pdf): void
             eingegangen. Im Anhang finden Sie alle Angaben als PDF - bitte bewahren Sie es auf.
 
             Über die Aufnahme entscheidet der Vorstand. Mit Annahme des Antrags beginnt die vorläufige
-            Mitgliedschaft (§ 4 der Satzung). Bei Fragen antworten Sie einfach auf diese E-Mail.
+            Mitgliedschaft (§ 4 der Satzung).{$parentHint}
+
+            Bei Fragen antworten Sie einfach auf diese E-Mail.
 
             Viele Grüße
             {$club}
@@ -177,7 +183,8 @@ function membership_send_board_mail(array $row, array $pdf, string $syncOutcome)
         $notes[] = "- Minderjährig. Erziehungsberechtigte/r: {$guardian['firstName']} {$guardian['lastName']} "
             . "<{$guardian['email']}>";
         $notes[] = $guardian['managedBy'] === 'eltern'
-            ? '- Verwaltung: zusammen mit der Mitgliedschaft der/des Erziehungsberechtigten.'
+            ? '- Verwaltung: zusammen mit der Mitgliedschaft der/des Erziehungsberechtigten. Ist deren/dessen'
+                . ' eigener Antrag noch offen, bitte zuerst diesen annehmen.'
             : '- Verwaltung: eigenständige Mitgliedschaft.';
     }
 

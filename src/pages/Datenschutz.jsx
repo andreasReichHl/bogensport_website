@@ -189,7 +189,7 @@ export default function Datenschutz() {
             <h3 className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</h3>
             <p>
               Wenn Sie über unsere Website die Mitgliedschaft beantragen, verarbeiten wir die Angaben aus dem Formular:
-              Name, Anschrift, Geburtsdatum, Geschlecht, E-Mail-Adresse, Telefonnummer, die gewählte Mitgliedsart,
+              Name, Anschrift, Geburtsdatum, Geschlecht, E-Mail-Adresse, Telefonnummern (mobil und privat), die gewählte Mitgliedsart,
               die Bankverbindung für das SEPA-Lastschriftmandat sowie bei Minderjährigen Name und Kontaktdaten der
               Erziehungsberechtigten. Zweck ist die Bearbeitung des Antrags und die Durchführung der Mitgliedschaft.
             </p>

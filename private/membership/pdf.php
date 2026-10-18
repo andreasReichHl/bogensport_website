@@ -160,7 +160,8 @@ function membership_render_pdf(array $row): string
     $pdf->row('Geschlecht', $genders[$applicant['gender']] ?? $applicant['gender']);
     $pdf->row('Anschrift', "{$applicant['street']}, {$applicant['zip']} {$applicant['city']}");
     $pdf->row('E-Mail', $applicant['email']);
-    $pdf->row('Telefon', $applicant['phone']);
+    $pdf->row('Mobil', $applicant['phone']);
+    $pdf->row('Telefon privat', $applicant['privatePhone'] ?? '');
 
     if ($guardian !== null) {
         $pdf->sectionTitle('Erziehungsberechtigte/r');

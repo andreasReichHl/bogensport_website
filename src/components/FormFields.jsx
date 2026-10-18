@@ -10,9 +10,9 @@ export function SectionTitle({number, children}) {
     );
 }
 
-export function Field({label, required, error, hint, children}) {
+export function Field({field, label, required, error, hint, children}) {
     return (
-        <label className="block">
+        <label className="block" data-field={field}>
       <span className="mb-2 block text-sm font-semibold text-slate-700">
         {label} {required && <span aria-hidden="true">*</span>}
       </span>

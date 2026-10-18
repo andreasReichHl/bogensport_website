@@ -98,7 +98,9 @@ function membership_validate_application(array $input, DateTimeImmutable $now): 
         'zip' => membership_string($applicantInput, 'zip', 5),
         'city' => membership_string($applicantInput, 'city', 100),
         'email' => mb_strtolower(membership_string($applicantInput, 'email')),
+        // "phone" is the mobile number (key kept so stored applications stay readable).
         'phone' => membership_string($applicantInput, 'phone', 50),
+        'privatePhone' => membership_string($applicantInput, 'privatePhone', 50),
     ];
 
     foreach (['firstName' => 'Vorname', 'lastName' => 'Nachname', 'street' => 'Straße und Hausnummer', 'city' => 'Ort'] as $field => $label) {

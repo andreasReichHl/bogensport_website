@@ -40,6 +40,37 @@ export function ageOn(dateOfBirth, today = new Date()) {
   return age >= 0 ? age : null;
 }
 
+export function normalizeIban(iban) {
+  return iban.replace(/\s+/g, "").toUpperCase();
+}
+
+/**
+ * Same check as membership_is_valid_iban() on the server: format, German length and the
+ * ISO 13616 check digits (mod 97 == 1).
+ */
+export function isValidIban(value) {
+  const iban = normalizeIban(value);
+
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban) || (iban.startsWith("DE") && iban.length !== 22)) {
+    return false;
+  }
+
+  const numeric = [...(iban.slice(4) + iban.slice(0, 4))]
+    .map((character) => (/[A-Z]/.test(character) ? String(character.charCodeAt(0) - 55) : character))
+    .join("");
+  let remainder = 0;
+
+  for (let index = 0; index < numeric.length; index += 7) {
+    remainder = Number(String(remainder) + numeric.slice(index, index + 7)) % 97;
+  }
+
+  return remainder === 1;
+}
+
+export function isValidBic(value) {
+  return /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(value.trim().toUpperCase());
+}
+
 export async function fetchMembershipForm() {
   const response = await fetch("/beitritt-formular.php", { cache: "no-store" });
 

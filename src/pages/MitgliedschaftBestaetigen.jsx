@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {Link, useSearchParams} from "react-router-dom";
 import Hero from "../components/Hero.jsx";
 import Notice from "../components/Notice.jsx";
@@ -8,6 +8,15 @@ import {
     formatEuro,
     formatInterval,
 } from "../utils/membership.js";
+
+function ParentApplicationHint() {
+    return (
+        <p>
+            Hast du deinen eigenen Mitgliedsantrag gerade erst gestellt, entscheidet der Vorstand über diesen Antrag,
+            sobald dein eigener Antrag angenommen ist.
+        </p>
+    );
+}
 
 const dateTimeFormatter = new Intl.DateTimeFormat("de-DE", {dateStyle: "medium", timeStyle: "short"});
 
@@ -36,9 +45,17 @@ function Summary({application}) {
     );
 }
 
-function ConfirmationContent({token}) {
+function ConfirmationContent({token, onShown}) {
     const [application, setApplication] = useState(null);
     const [state, setState] = useState(token ? "loading" : "invalid");
+
+    // Jump past the hero to what matters: the application once it is loaded, and the result
+    // notice after confirming (it replaces the summary the person had scrolled to).
+    useEffect(() => {
+        if (state !== "loading" && state !== "confirming") {
+            onShown();
+        }
+    }, [state, onShown]);
 
     useEffect(() => {
         if (!token) {
@@ -102,6 +119,7 @@ function ConfirmationContent({token}) {
                     Über die Aufnahme entscheidet der Vorstand. Mit Annahme des Antrags beginnt die vorläufige
                     Mitgliedschaft (§ 4 der Satzung).
                 </p>
+                {application?.managedByParent && <ParentApplicationHint/>}
             </Notice>
         );
     }
@@ -119,6 +137,11 @@ function ConfirmationContent({token}) {
                 Gespeichert werden dabei Zeitpunkt, IP-Adresse und Browser der Bestätigung als Nachweis. Der Link ist
                 gültig bis {dateTimeFormatter.format(new Date(application.expiresAt))} Uhr.
             </p>
+            {application.managedByParent && (
+                <div className="text-sm text-slate-700">
+                    <ParentApplicationHint/>
+                </div>
+            )}
             <button
                 type="button"
                 onClick={handleConfirm}
@@ -135,6 +158,10 @@ function ConfirmationContent({token}) {
 export default function MitgliedschaftBestaetigen() {
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token") ?? "";
+    const contentRef = useRef(null);
+    const scrollToContent = useCallback(() => {
+        contentRef.current?.scrollIntoView({behavior: "smooth", block: "start"});
+    }, []);
 
     return (
         <>
@@ -150,9 +177,9 @@ export default function MitgliedschaftBestaetigen() {
                 description="Ein Klick noch – dann ist dein Antrag beim Vorstand."
                 actions={[]}
             />
-            <section className="bg-slate-50">
+            <section ref={contentRef} className="scroll-mt-4 bg-slate-50">
                 <div className="mx-auto max-w-3xl px-5 pt-10 pb-14 sm:px-8 sm:pt-14 lg:pb-20">
-                    <ConfirmationContent key={token} token={token}/>
+                    <ConfirmationContent key={token} token={token} onShown={scrollToContent}/>
                 </div>
             </section>
         </>

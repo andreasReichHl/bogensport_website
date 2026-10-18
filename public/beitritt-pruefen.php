@@ -29,6 +29,8 @@ try {
         'reference' => $application['reference'],
         'applicantName' => "{$data['applicant']['firstName']} {$data['applicant']['lastName']}",
         'isMinor' => $data['isMinor'],
+        // Managed together with the parent's membership - the parent may have applied only just now.
+        'managedByParent' => $data['isMinor'] && $data['guardian']['managedBy'] === 'eltern',
         'group' => $data['group'],
         // Only enough to recognise the account - the link may be forwarded or seen by others.
         'ibanMasked' => substr($iban, 0, 4) . ' **** ' . substr($iban, -4),

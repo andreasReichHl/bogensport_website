@@ -21,18 +21,31 @@ class MembershipSyncException extends RuntimeException
 }
 
 /**
- * The address that becomes the easyVerein login: the applicant's own, for minors without one
- * (or managed by a parent) the guardian's.
+ * The address that becomes the easyVerein login: the applicant's own - for a minor without an
+ * address of its own (or with the guardian's) the guardian's, see membership_login_first_suffix().
  */
 function membership_login_base(array $data): string
 {
     $guardian = $data['guardian'];
+    $email = mb_strtolower($data['applicant']['email']);
 
-    if ($guardian !== null && ($guardian['managedBy'] === 'eltern' || $data['applicant']['email'] === '')) {
+    if ($guardian !== null && ($email === '' || $email === mb_strtolower($guardian['email']))) {
         return $guardian['email'];
     }
 
     return $data['applicant']['email'];
+}
+
+/**
+ * A child on the guardian's address never gets the address itself, but starts at address_1 -
+ * the plain address stays the parent's (own membership or own application, possibly not yet
+ * transferred).
+ */
+function membership_login_first_suffix(array $data): int
+{
+    $guardian = $data['guardian'];
+
+    return $guardian !== null && mb_strtolower(membership_login_base($data)) === mb_strtolower($guardian['email']) ? 1 : 0;
 }
 
 /**
@@ -75,7 +88,7 @@ function membership_pick_login(array $data, int $applicationId, int $startSuffix
 {
     $base = mb_strtolower(membership_login_base($data));
 
-    for ($suffix = $startSuffix; $suffix <= MEMBERSHIP_LOGIN_MAX_SUFFIX; $suffix++) {
+    for ($suffix = max($startSuffix, membership_login_first_suffix($data)); $suffix <= MEMBERSHIP_LOGIN_MAX_SUFFIX; $suffix++) {
         $candidate = membership_login_candidate($base, $suffix);
 
         if (!membership_login_reserved_locally($candidate, $applicationId)
@@ -88,15 +101,60 @@ function membership_pick_login(array $data, int $applicationId, int $startSuffix
 }
 
 /**
- * For "managed by a parent": the parent's member id, found by the login address. Ownership of
- * that address was proven by the confirmation mail. null if there is no such member.
+ * For "managed by a parent": the parent's own application (adult, same address) if it is still
+ * stored locally - parents may apply for themselves and then for their child right away.
  */
-function membership_find_parent_member_id(array $data): ?int
+function membership_find_parent_application(array $data, int $applicationId): ?array
 {
     $guardian = $data['guardian'];
 
     if ($guardian === null || $guardian['managedBy'] !== 'eltern') {
         return null;
+    }
+
+    $statement = member_area_db()->prepare(
+        'SELECT id FROM membership_applications WHERE email_hash = ? AND id <> ? ORDER BY id'
+    );
+    $statement->execute([membership_email_hash($guardian['email']), $applicationId]);
+
+    foreach ($statement->fetchAll(PDO::FETCH_COLUMN) as $candidateId) {
+        $candidate = membership_load_application((int)$candidateId);
+
+        if ($candidate !== null && !$candidate['data']['isMinor']) {
+            return $candidate;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Whether the child's transfer has to wait for the parent's own application: still unconfirmed
+ * or not yet in easyVerein, so there is nothing to link to yet. Not while it is sync_failed -
+ * then the child goes ahead unlinked and the board is told.
+ */
+function membership_parent_application_pending(?array $parentApplication): bool
+{
+    return $parentApplication !== null
+        && $parentApplication['easyverein_member_id'] === null
+        && in_array($parentApplication['status'], ['pending', 'confirmed'], true);
+}
+
+/**
+ * For "managed by a parent": the parent's member id - from the parent's own transferred
+ * application, else found in easyVerein by the login address. Ownership of that address was
+ * proven by the confirmation mail. null if there is no such member.
+ */
+function membership_find_parent_member_id(array $data, ?array $parentApplication): ?int
+{
+    $guardian = $data['guardian'];
+
+    if ($guardian === null || $guardian['managedBy'] !== 'eltern') {
+        return null;
+    }
+
+    if ($parentApplication !== null && $parentApplication['easyverein_member_id'] !== null) {
+        return (int)$parentApplication['easyverein_member_id'];
     }
 
     $result = easyverein_api_get('/member', ['email' => $guardian['email'], 'query' => '{id}']);
@@ -140,6 +198,8 @@ function membership_contact_payload(array $row): array
         'preferred_email_field' => 1,
         'preferred_communication_way' => 0,
         'mobile_phone' => $applicant['phone'] !== '' ? $applicant['phone'] : ($guardian['phone'] ?? ''),
+        // Not present in applications submitted before the field existed.
+        'private_phone' => $applicant['privatePhone'] ?? '',
         'street' => $applicant['street'],
         'zip' => $applicant['zip'],
         'city' => $applicant['city'],
@@ -200,7 +260,15 @@ function membership_sync_application(int $id): string
 
     $data = $row['data'];
     $notes = [];
-    $parentMemberId = membership_find_parent_member_id($data);
+    $parentApplication = membership_find_parent_application($data, $id);
+
+    if (membership_parent_application_pending($parentApplication)) {
+        // Not a failure: no attempt is counted, the cron job simply tries again next run.
+        return "Wartet auf die Übertragung des eigenen Antrags der/des Erziehungsberechtigten "
+            . "({$parentApplication['reference']}) – wird danach automatisch übertragen und verknüpft.";
+    }
+
+    $parentMemberId = membership_find_parent_member_id($data, $parentApplication);
 
     if ($data['guardian'] !== null && $data['guardian']['managedBy'] === 'eltern') {
         $notes[] = $parentMemberId !== null
