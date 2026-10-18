@@ -182,6 +182,55 @@ export default function Datenschutz() {
             </p>
           </section>
 
+          <section id="online-mitgliedsantrag" className="scroll-mt-28">
+            <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
+              Online-Mitgliedsantrag
+            </h2>
+            <h3 className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</h3>
+            <p>
+              Wenn Sie über unsere Website die Mitgliedschaft beantragen, verarbeiten wir die Angaben aus dem Formular:
+              Name, Anschrift, Geburtsdatum, Geschlecht, E-Mail-Adresse, Telefonnummer, die gewählte Mitgliedsart,
+              die Bankverbindung für das SEPA-Lastschriftmandat sowie bei Minderjährigen Name und Kontaktdaten der
+              Erziehungsberechtigten. Zweck ist die Bearbeitung des Antrags und die Durchführung der Mitgliedschaft.
+            </p>
+            <p className="mt-4">
+              Den Antrag müssen Sie über einen Link bestätigen, den wir an die angegebene E-Mail-Adresse senden
+              (Double-Opt-in). Als Nachweis, dass der Antrag von Ihnen stammt, speichern wir dabei Zeitpunkt,
+              IP-Adresse und Browserkennung des Absendens und der Bestätigung. Nach der Bestätigung erhalten Sie und
+              der Vorstand eine Zusammenfassung als PDF. Eine Prüfsumme auf dem PDF belegt, dass die Angaben nicht
+              nachträglich verändert wurden.
+            </p>
+            <h3 className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Rechtsgrundlage</h3>
+            <p>
+              Die Verarbeitung der Antragsdaten erfolgt zur Durchführung vorvertraglicher Maßnahmen und der
+              Mitgliedschaft gemäß Art. 6 Abs. 1 lit. b DSGVO. Die Speicherung der Nachweisdaten (Zeitpunkt,
+              IP-Adresse, Browserkennung) beruht auf unserem berechtigten Interesse, die Abgabe der Beitrittserklärung
+              und die Erteilung des Lastschriftmandats nachweisen zu können (Art. 6 Abs. 1 lit. f DSGVO). Die
+              freiwillige Einwilligung zur Veröffentlichung von Fotos beruht auf Art. 6 Abs. 1 lit. a DSGVO und kann
+              jederzeit mit Wirkung für die Zukunft widerrufen werden.
+            </p>
+            <h3 className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Empfänger</h3>
+            <p>
+              Die Angaben erhalten der Vorstand und – nach der Bestätigung – unsere Mitgliederverwaltung easyVerein
+              (siehe oben), wo der Vorstand über die Aufnahme entscheidet. Die E-Mails versenden wir über das
+              E-Mail-Postfach unseres Vereins bei unserem Hosting-Anbieter.
+            </p>
+            <h3 className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Speicherdauer</h3>
+            <p>
+              Auf dem Server unserer Website werden die Antragsdaten verschlüsselt gespeichert. Nicht bestätigte
+              Anträge löschen wir nach 48 Stunden. Bestätigte Anträge werden an easyVerein übertragen; die Kopie auf dem
+              Server unserer Website löschen wir 90 Tage nach der Übertragung. In easyVerein speichern wir die Daten für
+              die Dauer der Mitgliedschaft und darüber hinaus, soweit gesetzliche Aufbewahrungspflichten bestehen.
+              Wird ein Antrag abgelehnt, löschen wir die Daten, soweit keine Aufbewahrungspflichten entgegenstehen.
+            </p>
+            <h3 className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Bereitstellung vorgeschrieben oder erforderlich</h3>
+            <p>
+              Die mit * gekennzeichneten Angaben sind für die Mitgliedschaft erforderlich; ohne sie können wir den
+              Antrag nicht bearbeiten. Die Einwilligung zur Veröffentlichung von Fotos ist freiwillig und hat keinen
+              Einfluss auf die Aufnahme.
+            </p>
+          </section>
+
           <section>
             <h2 className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
               Kontaktaufnahme per E-Mail

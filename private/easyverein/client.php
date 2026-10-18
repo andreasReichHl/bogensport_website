@@ -109,3 +109,83 @@ function easyverein_build_query_string(array $query): string
 
     return implode('&', $parts);
 }
+
+/**
+ * Write request (POST / PATCH / DELETE) with a JSON body. Returns the decoded response body
+ * (empty array for 204). Throws EasyvereinApiException on any non-2xx status; the exception
+ * carries the status and the (truncated) error body, which names the offending fields.
+ */
+function easyverein_api_send(string $method, string $path, ?array $body = null): array
+{
+    $headers = ['Accept: application/json'];
+    $payload = null;
+
+    if ($body !== null) {
+        $headers[] = 'Content-Type: application/json';
+        $payload = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    }
+
+    return easyverein_api_write_request($method, $path, $headers, $payload);
+}
+
+/**
+ * Uploads a file into a file field of a resource (e.g. "declaration_of_application" of
+ * /member/{id}). Per the API docs this is a PATCH with a Content-Disposition header and the
+ * field name as multipart key.
+ */
+function easyverein_api_upload(string $path, string $field, string $content, string $filename, string $mimeType): array
+{
+    $safeFilename = preg_replace('/[^A-Za-z0-9._-]/', '_', $filename);
+
+    return easyverein_api_write_request(
+        'PATCH',
+        $path,
+        ['Accept: application/json', "Content-Disposition: attachment; name=\"{$field}\"; filename=\"{$safeFilename}\""],
+        [$field => new CURLStringFile($content, $safeFilename, $mimeType)]
+    );
+}
+
+class EasyvereinApiRequestException extends EasyvereinApiException
+{
+    public function __construct(string $message, public readonly int $status, public readonly string $responseBody)
+    {
+        parent::__construct($message);
+    }
+}
+
+function easyverein_api_write_request(string $method, string $path, array $headers, string|array|null $payload): array
+{
+    $curl = curl_init(EASYVEREIN_API_BASE_URL . $path);
+    $headers[] = 'Authorization: Bearer ' . easyverein_get_valid_token();
+
+    curl_setopt_array($curl, [
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTPHEADER => $headers,
+    ]);
+
+    if ($payload !== null) {
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $payload);
+    }
+
+    $body = curl_exec($curl);
+    $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+
+    if ($body === false) {
+        throw new EasyvereinApiException("easyVerein {$method} {$path} failed: " . curl_error($curl));
+    }
+
+    if ($status < 200 || $status >= 300) {
+        throw new EasyvereinApiRequestException(
+            "easyVerein {$method} {$path} failed with status {$status}: " . mb_substr((string)$body, 0, 300),
+            $status,
+            (string)$body
+        );
+    }
+
+    $decoded = json_decode((string)$body, true);
+
+    return is_array($decoded) ? $decoded : [];
+}

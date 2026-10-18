@@ -49,6 +49,10 @@ return array (
     'site_url' => 'http://localhost:5173',
     // Receives a copy of every confirmed application (with PDF).
     'board_email' => 'vorstand@badoldesloer-bogensport.de',
+    // Locally only dry-run: nothing is written to the (production!) easyVerein. 'live' in production.
+    'easyverein_sync' => 'dry-run',
+    'sync_max_attempts' => 5,
+    'retention_days' => 90,
     // Locally: Mailpit from docker-compose (no auth, no TLS) - mails show up at
     // http://localhost:8025 instead of being delivered. Production: the real SMTP account of
     // beitritt@badoldesloer-bogensport.de with 'smtp_secure' => 'tls' (port 587) or 'ssl' (465).

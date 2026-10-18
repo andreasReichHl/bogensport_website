@@ -421,7 +421,7 @@ export default function FormularMitgliedschaft() {
                                         error={errors["consents.datenschutz"]}
                                     >
                                         {texts.datenschutz}{" "}
-                                        <Link className="font-semibold text-blue-700 hover:underline" to="/datenschutz"
+                                        <Link className="font-semibold text-blue-700 hover:underline" to="/datenschutz#online-mitgliedsantrag"
                                               target="_blank">
                                             Datenschutzerklärung
                                         </Link>

@@ -50,6 +50,10 @@ function membership_ensure_applications_table(): void
           board_mailed_at DATETIME NULL,
           easyverein_contact_id BIGINT UNSIGNED NULL,
           easyverein_member_id BIGINT UNSIGNED NULL,
+          easyverein_login VARCHAR(190) NULL,
+          easyverein_group_assigned_at DATETIME NULL,
+          easyverein_files_uploaded_at DATETIME NULL,
+          sync_note VARCHAR(500) NULL,
           sync_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
           last_error VARCHAR(500) NULL,
           synced_at DATETIME NULL,
@@ -308,7 +312,10 @@ function membership_load_application(int $id): ?array
  */
 function membership_mark_step(int $id, string $column, string $value): void
 {
-    if (!in_array($column, ['signature', 'applicant_mailed_at', 'board_mailed_at'], true)) {
+    if (!in_array($column, [
+        'signature', 'applicant_mailed_at', 'board_mailed_at', 'easyverein_contact_id', 'easyverein_member_id',
+        'easyverein_login', 'easyverein_group_assigned_at', 'easyverein_files_uploaded_at', 'synced_at',
+    ], true)) {
         throw new InvalidArgumentException("Unknown processing column {$column}");
     }
 

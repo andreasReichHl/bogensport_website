@@ -42,6 +42,19 @@ function membership_config(): array
         'site_url' => (string)($raw['site_url'] ?? 'https://badoldesloer-bogensport.de'),
         'board_email' => (string)($raw['board_email'] ?? ''),
         'mail' => $raw['mail'] ?? [],
+        // Transfer of confirmed applications to easyVerein:
+        //   'off'     - nothing is transferred, the board creates the member by hand
+        //   'dry-run' - read-only lookups only, the planned requests are logged (local testing)
+        //   'live'    - applications are created in easyVerein (production)
+        'easyverein_sync' => in_array($raw['easyverein_sync'] ?? 'off', ['off', 'dry-run', 'live'], true)
+            ? ($raw['easyverein_sync'] ?? 'off')
+            : 'off',
+        // After this many failed transfer attempts the application is marked sync_failed and
+        // the board is alerted.
+        'sync_max_attempts' => (int)($raw['sync_max_attempts'] ?? 5),
+        // Days after the successful transfer until the local copy is deleted (the PDF and all
+        // data are then only in easyVerein). Unconfirmed applications: confirm_ttl_hours.
+        'retention_days' => (int)($raw['retention_days'] ?? 90),
     ];
 
     return $config;

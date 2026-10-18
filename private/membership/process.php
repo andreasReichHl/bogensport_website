@@ -9,6 +9,7 @@
  */
 
 require_once __DIR__ . '/pdf.php';
+require_once __DIR__ . '/sync.php';
 
 /**
  * @return list<string> steps that failed (empty = everything done)
@@ -22,6 +23,7 @@ function membership_process_confirmed(int $id): array
     }
 
     $failed = [];
+    $now = membership_db_time(new DateTimeImmutable('now', membership_timezone()));
 
     if ($row['signature'] === null) {
         $row['signature'] = membership_compute_signature($row);
@@ -33,26 +35,82 @@ function membership_process_confirmed(int $id): array
         'filename' => membership_pdf_filename($row['reference']),
         'type' => 'application/pdf',
     ];
-    $now = membership_db_time(new DateTimeImmutable('now', membership_timezone()));
 
-    foreach ([
-        'applicant_mailed_at' => 'membership_send_applicant_pdf_mail',
-        'board_mailed_at' => 'membership_send_board_mail',
-    ] as $column => $send) {
-        if ($row[$column] !== null) {
-            continue;
-        }
-
+    if ($row['applicant_mailed_at'] === null) {
         try {
-            $send($row, $pdf);
-            membership_mark_step($id, $column, $now);
+            membership_send_applicant_pdf_mail($row, $pdf);
+            membership_mark_step($id, 'applicant_mailed_at', $now);
         } catch (MembershipMailException $error) {
-            error_log("Membership application {$row['reference']}: {$column} failed: " . $error->getMessage());
-            $failed[] = $column;
+            error_log("Membership application {$row['reference']}: applicant mail failed: " . $error->getMessage());
+            $failed[] = 'applicant_mailed_at';
+        }
+    }
+
+    // Transfer before the board mail, so the board mail can say how it went.
+    $syncOutcome = $row['status'] === 'confirmed' ? membership_try_sync($row) : (string)$row['sync_note'];
+
+    if ($syncOutcome === null) {
+        $failed[] = 'sync';
+        $syncOutcome = 'Übertragung an easyVerein ist fehlgeschlagen und wird automatisch wiederholt.';
+    }
+
+    if ($row['board_mailed_at'] === null) {
+        try {
+            membership_send_board_mail($row, $pdf, $syncOutcome);
+            membership_mark_step($id, 'board_mailed_at', $now);
+        } catch (MembershipMailException $error) {
+            error_log("Membership application {$row['reference']}: board mail failed: " . $error->getMessage());
+            $failed[] = 'board_mailed_at';
         }
     }
 
     return $failed;
+}
+
+/**
+ * One transfer attempt. Returns the outcome text, or null if it failed - after
+ * sync_max_attempts failures the application is marked sync_failed and the board alerted.
+ */
+function membership_try_sync(array $row): ?string
+{
+    try {
+        return membership_sync_application((int)$row['id']);
+    } catch (EasyvereinTokenException | EasyvereinApiException | MembershipSyncException $error) {
+        $attempts = (int)$row['sync_attempts'] + 1;
+        $giveUp = $attempts >= membership_config()['sync_max_attempts'];
+
+        error_log("Membership application {$row['reference']}: sync attempt {$attempts} failed: " . $error->getMessage());
+        member_area_db()
+            ->prepare('UPDATE membership_applications SET sync_attempts = ?, last_error = ?, status = ? WHERE id = ?')
+            ->execute([$attempts, mb_substr($error->getMessage(), 0, 500), $giveUp ? 'sync_failed' : 'confirmed', $row['id']]);
+
+        if ($giveUp) {
+            membership_send_sync_failed_mail($row, $error->getMessage());
+        }
+
+        return null;
+    }
+}
+
+function membership_send_sync_failed_mail(array $row, string $error): void
+{
+    $boardEmail = membership_config()['board_email'];
+    $body = <<<TEXT
+        Der Online-Mitgliedsantrag {$row['reference']} konnte nach mehreren Versuchen nicht an easyVerein
+        übertragen werden. Bitte das Mitglied anhand des PDFs aus der ersten Mail manuell in easyVerein anlegen
+        oder nach Behebung des Fehlers erneut übertragen:
+
+            php private/membership/cron.php retry {$row['reference']}
+
+        Letzter Fehler:
+        {$error}
+        TEXT;
+
+    try {
+        membership_send_mail($boardEmail, "Übertragung fehlgeschlagen: Mitgliedsantrag {$row['reference']}", $body);
+    } catch (MembershipMailException $mailError) {
+        error_log("Membership application {$row['reference']}: sync-failed alert mail failed: " . $mailError->getMessage());
+    }
 }
 
 function membership_send_applicant_pdf_mail(array $row, array $pdf): void
@@ -99,7 +157,7 @@ function membership_send_applicant_pdf_mail(array $row, array $pdf): void
     );
 }
 
-function membership_send_board_mail(array $row, array $pdf): void
+function membership_send_board_mail(array $row, array $pdf, string $syncOutcome): void
 {
     $boardEmail = membership_config()['board_email'];
 
@@ -119,12 +177,16 @@ function membership_send_board_mail(array $row, array $pdf): void
         $notes[] = "- Minderjährig. Erziehungsberechtigte/r: {$guardian['firstName']} {$guardian['lastName']} "
             . "<{$guardian['email']}>";
         $notes[] = $guardian['managedBy'] === 'eltern'
-            ? '- Verwaltung: zusammen mit der Mitgliedschaft der/des Erziehungsberechtigten (Angabe muss geprüft werden).'
+            ? '- Verwaltung: zusammen mit der Mitgliedschaft der/des Erziehungsberechtigten.'
             : '- Verwaltung: eigenständige Mitgliedschaft.';
     }
 
     if (!$data['consents']['fotos']['accepted']) {
         $notes[] = '- KEINE Einwilligung zur Veröffentlichung von Fotos.';
+    }
+
+    if ($syncOutcome !== '') {
+        $notes[] = "- easyVerein: {$syncOutcome}";
     }
 
     $notesText = $notes !== [] ? "Hinweise:\n" . implode("\n", $notes) . "\n\n" : '';
