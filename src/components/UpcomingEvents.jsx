@@ -30,7 +30,15 @@ function closestYear(years, targetYear) {
   ), years[0]);
 }
 
-export default function UpcomingEvents({ includePast = false, limit, showAllLink = false }) {
+// hideWhenEmpty: render nothing while loading, on errors, or without upcoming events, and
+// report via onAvailabilityChange whether there is anything to show (used on the homepage).
+export default function UpcomingEvents({
+  includePast = false,
+  limit,
+  showAllLink = false,
+  hideWhenEmpty = false,
+  onAvailabilityChange,
+}) {
   const [events, setEvents] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [status, setStatus] = useState("loading");
@@ -63,6 +71,7 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
           const limitedEvents = limit ? calendarEvents.slice(0, limit) : calendarEvents;
           setEvents(limitedEvents);
           setStatus("success");
+          onAvailabilityChange?.(limitedEvents.length > 0);
 
           if (includePast && limitedEvents.length > 0) {
             const availableYears = limitedEvents.map((event) => event.startDate.getFullYear());
@@ -77,6 +86,7 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
       } catch {
         if (isMounted) {
           setStatus("error");
+          onAvailabilityChange?.(false);
         }
       }
     }
@@ -86,7 +96,11 @@ export default function UpcomingEvents({ includePast = false, limit, showAllLink
     return () => {
       isMounted = false;
     };
-  }, [includePast, limit]);
+  }, [includePast, limit, onAvailabilityChange]);
+
+  if (hideWhenEmpty && (status !== "success" || events.length === 0)) {
+    return null;
+  }
 
   if (status === "loading") {
     return <p className="mt-5 text-sm text-slate-600">Termine werden geladen ...</p>;

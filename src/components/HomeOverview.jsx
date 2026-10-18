@@ -1,3 +1,4 @@
+import {useState} from "react";
 import {Link} from "react-router-dom";
 
 import UpcomingEvents from "./UpcomingEvents.jsx";
@@ -74,6 +75,8 @@ function InfoIcon({children}) {
 }
 
 export default function HomeOverview() {
+    const [hasUpcomingEvents, setHasUpcomingEvents] = useState(false);
+
     return (
         <section className="bg-slate-50 pt-5">
             <div className="relative z-20 mx-auto max-w-8xl px-5 sm:px-8 lg:px-12">
@@ -102,7 +105,9 @@ export default function HomeOverview() {
             </div>
 
             <div id="training"
-                 className="mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-12 lg:py-16">
+                 className={`mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:px-8 lg:px-12 lg:py-16 ${
+                     hasUpcomingEvents ? "lg:grid-cols-[1.1fr_0.9fr]" : ""
+                 }`}>
                 <section>
                     <p className="font-heading text-sm font-bold uppercase tracking-wide text-blue-700">Über unseren
                         Verein</p>
@@ -124,10 +129,14 @@ export default function HomeOverview() {
                     </Link>
                 </section>
 
-                <aside className="rounded-lg border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/70">
+                {/* Stays mounted so the events can load; only shown once there is something to show. */}
+                <aside
+                    hidden={!hasUpcomingEvents}
+                    className="rounded-lg border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/70"
+                >
                     <p className="font-heading text-sm font-bold uppercase tracking-wide text-blue-700">Aktuelle
                         Termine</p>
-                    <UpcomingEvents limit={2} showAllLink/>
+                    <UpcomingEvents limit={2} showAllLink hideWhenEmpty onAvailabilityChange={setHasUpcomingEvents}/>
                 </aside>
             </div>
         </section>
