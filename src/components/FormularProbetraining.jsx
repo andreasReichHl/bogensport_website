@@ -1,5 +1,7 @@
 import {useEffect, useRef, useState} from "react";
+import {Link} from "react-router-dom";
 import DatenschutzDialog from "./DatenschutzDialog.jsx";
+import Notice from "./Notice.jsx";
 import {Field, inputClass, SectionTitle, textareaClass} from "./FormFields.jsx";
 
 const experienceLevels = ["Keine Erfahrung", "Ein wenig Erfahrung", "Fortgeschritten"];
@@ -26,16 +28,26 @@ export default function FormularProbetraining() {
     const [errors, setErrors] = useState({});
     // Spam check on the server: bots submit right after loading, people need a while.
     const shownAt = useRef(0);
+    const successRef = useRef(null);
+    const feedbackRef = useRef(null);
 
     useEffect(() => {
         shownAt.current = Date.now();
     }, []);
 
+    // Bring the result into view - the button sits at the end of a long form.
+    useEffect(() => {
+        if (submissionState === "success") {
+            successRef.current?.scrollIntoView({behavior: "smooth", block: "start"});
+        } else if (["invalid", "rate_limited", "error"].includes(submissionState)) {
+            feedbackRef.current?.scrollIntoView({behavior: "smooth", block: "center"});
+        }
+    }, [submissionState]);
+
     async function handleSubmit(event) {
         event.preventDefault();
 
-        const form = event.currentTarget;
-        const formData = new FormData(form);
+        const formData = new FormData(event.currentTarget);
         const ownEquipment = getFormValue(formData, "Eigene Ausrüstung vorhanden");
 
         setSubmissionState("submitting");
@@ -65,7 +77,6 @@ export default function FormularProbetraining() {
 
             if (response.status === 201) {
                 setSubmissionState("success");
-                form.reset();
                 setParticipant("self");
                 setAge("");
                 return;
@@ -82,6 +93,37 @@ export default function FormularProbetraining() {
         } catch {
             setSubmissionState("error");
         }
+    }
+
+    if (submissionState === "success") {
+        return (
+            <section id="probetraining" ref={successRef} className="scroll-mt-4 bg-slate-50">
+                <div className="mx-auto max-w-3xl px-5 pt-10 pb-14 sm:px-8 sm:pt-14 lg:pb-20">
+                    <Notice title="Vielen Dank – deine Anfrage ist angekommen">
+                        <p>
+                            Wir haben deine Anfrage für ein Probetraining erhalten und melden uns in den nächsten Tagen
+                            per E-Mail oder Telefon bei dir, um einen Termin abzustimmen.
+                        </p>
+                        <p>Eine automatische Bestätigungs-E-Mail verschicken wir nicht – wir melden uns persönlich.</p>
+                    </Notice>
+                    <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
+                        <Link
+                            to="/"
+                            className="font-heading inline-flex h-11 items-center justify-center gap-3 rounded-md bg-blue-600 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+                        >
+                            Zur Startseite <span aria-hidden="true">→</span>
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={() => setSubmissionState("idle")}
+                            className="text-sm font-semibold text-blue-700 hover:underline"
+                        >
+                            Weitere Anfrage senden
+                        </button>
+                    </div>
+                </div>
+            </section>
+        );
     }
 
     return (
@@ -268,31 +310,28 @@ export default function FormularProbetraining() {
                             {submissionState === "submitting" ? "Wird gesendet ..." : "Probetraining anfragen"}
                             {submissionState !== "submitting" && <span aria-hidden="true">→</span>}
                         </button>
-                        {submissionState === "success" && (
-                            <p className="mt-4 text-sm font-semibold text-green-700">
-                                Deine Anfrage wurde gesendet.
-                            </p>
-                        )}
-                        {submissionState === "invalid" && (
-                            <div className="mt-4 text-sm text-red-700" role="alert">
-                                <p className="font-semibold">Bitte prüfe deine Angaben:</p>
-                                <ul className="mt-1 list-disc pl-5">
-                                    {Object.entries(errors).map(([key, message]) => (
-                                        <li key={key}>{errorLabels[key] ?? key}: {message}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {submissionState === "rate_limited" && (
-                            <p className="mt-4 text-sm font-semibold text-red-700">
-                                Es wurden zu viele Anfragen gesendet. Bitte versuche es später erneut.
-                            </p>
-                        )}
-                        {submissionState === "error" && (
-                            <p className="mt-4 text-sm font-semibold text-red-700">
-                                Die Anfrage konnte nicht gesendet werden. Bitte versuche es später erneut.
-                            </p>
-                        )}
+                        <div ref={feedbackRef}>
+                            {submissionState === "invalid" && (
+                                <div className="mt-4 text-sm text-red-700" role="alert">
+                                    <p className="font-semibold">Bitte prüfe deine Angaben:</p>
+                                    <ul className="mt-1 list-disc pl-5">
+                                        {Object.entries(errors).map(([key, message]) => (
+                                            <li key={key}>{errorLabels[key] ?? key}: {message}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                            {submissionState === "rate_limited" && (
+                                <p className="mt-4 text-sm font-semibold text-red-700">
+                                    Es wurden zu viele Anfragen gesendet. Bitte versuche es später erneut.
+                                </p>
+                            )}
+                            {submissionState === "error" && (
+                                <p className="mt-4 text-sm font-semibold text-red-700">
+                                    Die Anfrage konnte nicht gesendet werden. Bitte versuche es später erneut.
+                                </p>
+                            )}
+                        </div>
                         <p className="mt-4 text-sm text-slate-500">* Pflichtfelder</p>
                     </div>
                 </form>
