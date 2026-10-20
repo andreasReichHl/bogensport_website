@@ -58,7 +58,6 @@ php private/member-area/check-db.php   # DB-Verbindungscheck (nur per CLI nutzba
 | `MEMBER_AREA_PRIVATE_PATH` | PHP | Pfad zu `private/member-area`, falls abweichend vom Standard-Layout |
 | `MEMBER_AREA_NEWS_IMAGE_RETENTION_DAYS` | PHP | Wie lange Bilder abgelaufener News-Beiträge aufbewahrt werden (Default: 30) |
 | `VITE_BASE_PATH` | Vite | Basis-Pfad, falls die App nicht unter `/` ausgeliefert wird |
-| `VITE_FORMSPREE_ENDPOINT` | Vite | Formspree-Endpunkt für das Probetraining-Formular |
 | `EASYVEREIN_API_TOKEN` | PHP | Einmaliger Bootstrap-Token für die easyVerein-API (siehe unten) |
 
 ## Mitgliederbereich
@@ -70,6 +69,15 @@ Login unter `/mitglieder/login.php`. Rollen: `superadmin`, `admin`, `member` (si
 Termine werden live aus dem easyVerein-Kalender **"Turniere"** geladen (`GET /event?calendar=…&is_public=true`), inklusive eines optionalen Anhangs über das Custom Field **"Anhang"**. Beide Namen sind in `public/termine-feed.php` / `public/termine-attachment.php` als Konstanten hinterlegt.
 
 Der API-Token wird automatisch verwaltet (`private/easyverein/token.php`): er liegt in der Tabelle `easyverein_tokens`, wird nach 15 von 30 Tagen Gültigkeit automatisch erneuert (`GET /refresh-token`) und ist race-safe für mehrere gleichzeitige PHP-Worker. Für den allerersten Start (keine Zeile in der Tabelle vorhanden) muss einmalig ein in der easyVerein-Oberfläche (Einstellungen → easyVerein API) generierter Token über die Umgebungsvariable `EASYVEREIN_API_TOKEN` gesetzt werden.
+
+## Probetraining-Formular
+
+`public/probetraining-absenden.php` (POST, JSON) prüft die Anfrage serverseitig (`private/probetraining/request.php`) und schickt sie per Mail an `trial_training_email` (Standard: info@) – über dasselbe SMTP-Postfach wie der Mitgliedsbeitritt (`membership.mail`), Antworten gehen per Reply-To direkt an den Absender. Kein externer Formulardienst. Spamschutz:
+
+- Honeypot-Feld und Zeitfalle (abgeschickt weniger als 3 Sekunden nach dem Laden) – solche Anfragen bekommen eine Scheinbestätigung, es geht keine Mail raus.
+- Links in Namen, Nachricht oder Gesundheitshinweisen werden abgelehnt.
+- Limit: 5 Anfragen pro Stunde und IP, 30 pro Stunde insgesamt (greift es, steht ein Eintrag im PHP-Fehlerlog). Gespeichert wird dafür nur ein Hash der IP (Tabelle `probetraining_requests`, Einträge nach 24 Stunden gelöscht).
+- Bestätigungsmails an die eingetragene Adresse gibt es bewusst nicht – das Formular kann so nicht missbraucht werden, um Mails an Dritte zu schicken.
 
 ## Online-Mitgliedsbeitritt
 

@@ -236,7 +236,7 @@ export default function DatenschutzContent({ headingLevel = 2 }) {
 
       <section>
         <Heading className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
-          Kontaktaufnahme per E-Mail
+          Kontaktaufnahme per E-Mail und Probetraining-Formular
         </Heading>
         <Subheading className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</Subheading>
         <p>
@@ -244,6 +244,14 @@ export default function DatenschutzContent({ headingLevel = 2 }) {
           insbesondere Ihre E-Mail-Adresse, Ihren Namen, den Inhalt Ihrer Nachricht und gegebenenfalls weitere von
           Ihnen angegebene Kontaktdaten. Die Verarbeitung erfolgt zum Zweck der Bearbeitung Ihrer Anfrage und der
           anschließenden Kommunikation mit Ihnen.
+        </p>
+        <p className="mt-4">
+          Anfragen über das Formular für ein Probetraining (Name, Alter, E-Mail-Adresse, Telefonnummer, bei Kindern
+          der Name des Erziehungsberechtigten, Erfahrung, Ausrüstung, Ihre Nachricht und freiwillige gesundheitliche
+          Hinweise) werden von unserem Webserver per E-Mail an den Verein übermittelt; ein externer Formulardienst
+          wird dafür nicht genutzt. Auf dem Webserver werden die Angaben nicht gespeichert. Zum Schutz vor
+          missbräuchlichen Massenanfragen speichern wir lediglich einen nicht umkehrbaren Hashwert Ihrer IP-Adresse
+          für höchstens 24 Stunden.
         </p>
         <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Rechtsgrundlage</Subheading>
         <p>

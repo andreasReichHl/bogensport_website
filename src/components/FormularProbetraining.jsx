@@ -1,86 +1,86 @@
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import DatenschutzDialog from "./DatenschutzDialog.jsx";
 import {Field, inputClass, SectionTitle, textareaClass} from "./FormFields.jsx";
 
 const experienceLevels = ["Keine Erfahrung", "Ein wenig Erfahrung", "Fortgeschritten"];
-const formspreeEndpoint = import.meta.env.VITE_FORMSPREE_ENDPOINT || "";
+const errorLabels = {
+    firstName: "Vorname",
+    lastName: "Nachname",
+    age: "Alter",
+    email: "E-Mail",
+    guardianName: "Name des Erziehungsberechtigten",
+    message: "Nachricht / Fragen",
+    healthNotes: "Gesundheitliche Hinweise",
+    experience: "Erfahrung im Bogensport",
+    ownEquipment: "Eigene Ausrüstung",
+    consents: "Zustimmung",
+};
 
 function getFormValue(formData, key) {
-    return formData.get(key)?.toString().trim() || "-";
+    return formData.get(key)?.toString().trim() ?? "";
 }
 
 export default function FormularProbetraining() {
     const [participant, setParticipant] = useState("self");
     const [age, setAge] = useState("");
     const [submissionState, setSubmissionState] = useState("idle");
+    const [errors, setErrors] = useState({});
+    // Spam check on the server: bots submit right after loading, people need a while.
+    const shownAt = useRef(0);
+
+    useEffect(() => {
+        shownAt.current = Date.now();
+    }, []);
 
     async function handleSubmit(event) {
         event.preventDefault();
 
-        if (!formspreeEndpoint) {
-            setSubmissionState("error");
-            window.alert("Formspree ist noch nicht konfiguriert. Bitte VITE_FORMSPREE_ENDPOINT setzen.");
-            return;
-        }
-
         const form = event.currentTarget;
         const formData = new FormData(form);
-        const email = getFormValue(formData, "E-Mail");
-        const subject = "Neue Anfrage für ein Probetraining";
-        const message = [
-            "Neue Anfrage für ein Probetraining",
-            "",
-            "Persönliche Daten",
-            `Vorname: ${getFormValue(formData, "Vorname")}`,
-            `Nachname: ${getFormValue(formData, "Nachname")}`,
-            `Alter: ${getFormValue(formData, "Alter")}`,
-            `E-Mail: ${email}`,
-            `Telefon: ${getFormValue(formData, "Telefon")}`,
-            "",
-            "Teilnehmer",
-            `Anmeldung: ${getFormValue(formData, "Teilnehmer")}`,
-            `Name des Erziehungsberechtigten: ${getFormValue(formData, "Name des Erziehungsberechtigten")}`,
-            "",
-            "Erfahrung & Ausrüstung",
-            `Erfahrung im Bogensport: ${getFormValue(formData, "Erfahrung im Bogensport")}`,
-            `Eigene Ausrüstung vorhanden: ${getFormValue(formData, "Eigene Ausrüstung vorhanden")}`,
-            "",
-            "Weitere Hinweise",
-            `Nachricht / Fragen: ${getFormValue(formData, "Nachricht / Fragen")}`,
-            `Gesundheitliche Hinweise: ${getFormValue(formData, "Gesundheitliche Hinweise")}`,
-            "",
-            "Zustimmung",
-            "Datenschutzerklärung akzeptiert: Ja",
-            "Kontaktaufnahme erlaubt: Ja",
-        ].join("\n");
-
-        const payload = new FormData();
-
-        payload.append("email", email);
-        payload.append("_replyto", email);
-        payload.append("_subject", subject);
-        payload.append("Alter", getFormValue(formData, "Alter"));
-        payload.append("message", message);
+        const ownEquipment = getFormValue(formData, "Eigene Ausrüstung vorhanden");
 
         setSubmissionState("submitting");
+        setErrors({});
 
         try {
-            const response = await fetch(formspreeEndpoint, {
+            const response = await fetch("/probetraining-absenden.php", {
                 method: "POST",
-                body: payload,
-                headers: {
-                    Accept: "application/json",
-                },
+                headers: {"Content-Type": "application/json", Accept: "application/json"},
+                body: JSON.stringify({
+                    firstName: getFormValue(formData, "Vorname"),
+                    lastName: getFormValue(formData, "Nachname"),
+                    age: Number(getFormValue(formData, "Alter")),
+                    email: getFormValue(formData, "E-Mail"),
+                    phone: getFormValue(formData, "Telefon"),
+                    forChild: participant === "child",
+                    guardianName: getFormValue(formData, "Name des Erziehungsberechtigten"),
+                    experience: getFormValue(formData, "Erfahrung im Bogensport"),
+                    ownEquipment: ownEquipment === "" ? null : ownEquipment === "Ja",
+                    message: getFormValue(formData, "Nachricht / Fragen"),
+                    healthNotes: getFormValue(formData, "Gesundheitliche Hinweise"),
+                    consentPrivacy: formData.get("consentPrivacy") === "on",
+                    consentContact: formData.get("consentContact") === "on",
+                    website: getFormValue(formData, "website"),
+                    fillTimeMs: Date.now() - shownAt.current,
+                }),
             });
 
-            if (!response.ok) {
-                throw new Error("Formspree request failed");
+            if (response.status === 201) {
+                setSubmissionState("success");
+                form.reset();
+                setParticipant("self");
+                setAge("");
+                return;
             }
 
-            setSubmissionState("success");
-            form.reset();
-            setParticipant("self");
-            setAge("");
+            if (response.status === 422) {
+                const body = await response.json().catch(() => ({}));
+                setErrors(body.errors ?? {});
+                setSubmissionState("invalid");
+                return;
+            }
+
+            setSubmissionState(response.status === 429 ? "rate_limited" : "error");
         } catch {
             setSubmissionState("error");
         }
@@ -92,6 +92,13 @@ export default function FormularProbetraining() {
                 <form
                     onSubmit={handleSubmit}
                     className="relative z-10 p-5 sm:p-8">
+                    {/* Honeypot: hidden from people, bots tend to fill it. */}
+                    <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+                        <label>
+                            Website
+                            <input name="website" tabIndex={-1} autoComplete="off"/>
+                        </label>
+                    </div>
                     <div className="grid gap-8 lg:grid-cols-[1.45fr_1fr] lg:divide-x lg:divide-slate-200">
                         <div className="space-y-8 lg:pr-8">
                             <section>
@@ -225,7 +232,7 @@ export default function FormularProbetraining() {
                                 <div className="space-y-4 text-sm text-slate-700">
                                     <label className="flex items-start gap-3">
                                         <input className="mt-1 h-5 w-5 shrink-0 accent-blue-600" type="checkbox"
-                                               required/>
+                                               name="consentPrivacy" required/>
                                         <span>
                       Ich akzeptiere die{" "}
                                             <DatenschutzDialog startAt={null}/>
@@ -234,7 +241,7 @@ export default function FormularProbetraining() {
                                     </label>
                                     <label className="flex items-start gap-3">
                                         <input className="mt-1 h-5 w-5 shrink-0 accent-blue-600" type="checkbox"
-                                               required/>
+                                               name="consentContact" required/>
                                         <span>
                       Ich bin damit einverstanden, dass der Verein mich zur Terminabstimmung kontaktieren darf. *
                                         </span>
@@ -272,6 +279,21 @@ export default function FormularProbetraining() {
                         {submissionState === "success" && (
                             <p className="mt-4 text-sm font-semibold text-green-700">
                                 Deine Anfrage wurde gesendet.
+                            </p>
+                        )}
+                        {submissionState === "invalid" && (
+                            <div className="mt-4 text-sm text-red-700" role="alert">
+                                <p className="font-semibold">Bitte prüfe deine Angaben:</p>
+                                <ul className="mt-1 list-disc pl-5">
+                                    {Object.entries(errors).map(([key, message]) => (
+                                        <li key={key}>{errorLabels[key] ?? key}: {message}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        {submissionState === "rate_limited" && (
+                            <p className="mt-4 text-sm font-semibold text-red-700">
+                                Es wurden zu viele Anfragen gesendet. Bitte versuche es später erneut.
                             </p>
                         )}
                         {submissionState === "error" && (

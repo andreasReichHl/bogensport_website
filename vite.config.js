@@ -25,6 +25,10 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
+      '/probetraining-absenden.php': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
       '/uploads/news': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,

@@ -49,6 +49,8 @@ return array (
     'site_url' => 'http://localhost:5173',
     // Receives a copy of every confirmed application (with PDF).
     'board_email' => 'vorstand@badoldesloer-bogensport.de',
+    // Receives the Probetraining requests from the website (sent via the same mailbox as below).
+    'trial_training_email' => 'info@badoldesloer-bogensport.de',
     // Locally only dry-run: nothing is written to the (production!) easyVerein. 'live' in production.
     'easyverein_sync' => 'dry-run',
     'sync_max_attempts' => 5,
