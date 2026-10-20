@@ -627,6 +627,10 @@ export default function FormularMitgliedschaft() {
                                     vorläufige Mitgliedschaft (§ 4 der Satzung).
                                 </p>
                             </Notice>
+
+                            <Notice title="Lieber auf Papier?">
+                                <PaperApplicationHint/>
+                            </Notice>
                         </div>
                     </div>
 
