@@ -75,7 +75,7 @@ Der API-Token wird automatisch verwaltet (`private/easyverein/token.php`): er li
 `public/probetraining-absenden.php` (POST, JSON) prüft die Anfrage serverseitig (`private/probetraining/request.php`) und schickt sie per Mail an `trial_training_email` (Standard: info@) – über dasselbe SMTP-Postfach wie der Mitgliedsbeitritt (`membership.mail`), Antworten gehen per Reply-To direkt an den Absender. Kein externer Formulardienst. Spamschutz:
 
 - Honeypot-Feld und Zeitfalle (abgeschickt weniger als 3 Sekunden nach dem Laden) – solche Anfragen bekommen eine Scheinbestätigung, es geht keine Mail raus.
-- Links in Namen, Nachricht oder Gesundheitshinweisen werden abgelehnt.
+- Links in Namen oder Nachricht werden abgelehnt.
 - Limit: 5 Anfragen pro Stunde und IP, 30 pro Stunde insgesamt (greift es, steht ein Eintrag im PHP-Fehlerlog). Gespeichert wird dafür nur ein Hash der IP (Tabelle `probetraining_requests`, Einträge nach 24 Stunden gelöscht).
 - Bestätigungsmails an die eingetragene Adresse gibt es bewusst nicht – das Formular kann so nicht missbraucht werden, um Mails an Dritte zu schicken.
 

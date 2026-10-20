@@ -10,7 +10,6 @@ const errorLabels = {
     email: "E-Mail",
     guardianName: "Name des Erziehungsberechtigten",
     message: "Nachricht / Fragen",
-    healthNotes: "Gesundheitliche Hinweise",
     experience: "Erfahrung im Bogensport",
     ownEquipment: "Eigene Ausrüstung",
     consents: "Zustimmung",
@@ -57,7 +56,6 @@ export default function FormularProbetraining() {
                     experience: getFormValue(formData, "Erfahrung im Bogensport"),
                     ownEquipment: ownEquipment === "" ? null : ownEquipment === "Ja",
                     message: getFormValue(formData, "Nachricht / Fragen"),
-                    healthNotes: getFormValue(formData, "Gesundheitliche Hinweise"),
                     consentPrivacy: formData.get("consentPrivacy") === "on",
                     consentContact: formData.get("consentContact") === "on",
                     website: getFormValue(formData, "website"),
@@ -212,19 +210,13 @@ export default function FormularProbetraining() {
                         <div className="space-y-8 lg:pl-8">
                             <section>
                                 <SectionTitle number="4">Weitere Hinweise</SectionTitle>
-                                <div className="space-y-5">
-                                    <Field label="Nachricht / Fragen">
-                                        <textarea className={textareaClass} name="Nachricht / Fragen"
-                                                  placeholder="Deine Nachricht an uns ..."/>
-                                    </Field>
-                                    <Field label="Gesundheitliche Hinweise (optional)">
-                    <textarea
-                        className={textareaClass}
-                        name="Gesundheitliche Hinweise"
-                        placeholder="z. B. Allergien, körperliche Einschränkungen ..."
-                    />
-                                    </Field>
-                                </div>
+                                <Field
+                                    label="Nachricht / Fragen"
+                                    hint="Gesundheitliche Punkte (z. B. Allergien, körperliche Einschränkungen) bitte nicht hier eintragen – sprich uns dazu gern beim Probetraining direkt an."
+                                >
+                                    <textarea className={textareaClass} name="Nachricht / Fragen"
+                                              placeholder="Deine Nachricht an uns ..."/>
+                                </Field>
                             </section>
 
                             <section className="border-t border-slate-200 pt-8">

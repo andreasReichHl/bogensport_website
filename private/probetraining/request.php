@@ -70,7 +70,6 @@ function probetraining_validate(array $input): array
         'ownEquipment' => $input['ownEquipment'] ?? null,
         // Multi-line - keep the line breaks.
         'message' => probetraining_text($input, 'message', 3000),
-        'healthNotes' => probetraining_text($input, 'healthNotes', 1000),
     ];
 
     foreach (['firstName' => 'Vorname', 'lastName' => 'Nachname'] as $field => $label) {
@@ -80,7 +79,7 @@ function probetraining_validate(array $input): array
     }
 
     // Spam almost always carries links, real requests practically never.
-    foreach (['firstName', 'lastName', 'guardianName', 'message', 'healthNotes'] as $field) {
+    foreach (['firstName', 'lastName', 'guardianName', 'message'] as $field) {
         if (!isset($errors[$field]) && probetraining_contains_link($request[$field])) {
             $errors[$field] = 'Bitte keine Links eintragen.';
         }
@@ -168,7 +167,6 @@ function probetraining_send_mail(array $request): void
     $equipment = $request['ownEquipment'] ? 'Ja' : 'Nein';
     $phone = $or($request['phone']);
     $message = $or($request['message']);
-    $healthNotes = $or($request['healthNotes']);
 
     $body = <<<TEXT
         Neue Anfrage für ein Probetraining über die Website.
@@ -189,9 +187,6 @@ function probetraining_send_mail(array $request): void
 
         Nachricht / Fragen:
         {$message}
-
-        Gesundheitliche Hinweise:
-        {$healthNotes}
 
         Datenschutzerklärung akzeptiert und Kontaktaufnahme erlaubt: Ja
 

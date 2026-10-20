@@ -247,8 +247,7 @@ export default function DatenschutzContent({ headingLevel = 2 }) {
         </p>
         <p className="mt-4">
           Anfragen über das Formular für ein Probetraining (Name, Alter, E-Mail-Adresse, Telefonnummer, bei Kindern
-          der Name des Erziehungsberechtigten, Erfahrung, Ausrüstung, Ihre Nachricht und freiwillige gesundheitliche
-          Hinweise) werden von unserem Webserver per E-Mail an den Verein übermittelt; ein externer Formulardienst
+          der Name des Erziehungsberechtigten, Erfahrung, Ausrüstung und Ihre Nachricht) werden von unserem Webserver per E-Mail an den Verein übermittelt; ein externer Formulardienst
           wird dafür nicht genutzt. Auf dem Webserver werden die Angaben nicht gespeichert. Zum Schutz vor
           missbräuchlichen Massenanfragen speichern wir lediglich einen nicht umkehrbaren Hashwert Ihrer IP-Adresse
           für höchstens 24 Stunden.
