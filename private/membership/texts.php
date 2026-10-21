@@ -13,6 +13,8 @@ require_once __DIR__ . '/config.php';
 
 const MEMBERSHIP_TEXTS_VERSION = '2026-10-18-7';
 const MEMBERSHIP_CLUB_NAME = 'Bad Oldesloer Bogensport e.V.';
+// Postal address as in the Impressum (src/utils/siteConfig.js), shown in the mail footer.
+const MEMBERSHIP_CLUB_ADDRESS = 'Postfach 11 02, 23831 Bad Oldesloe';
 
 function membership_texts(): array
 {

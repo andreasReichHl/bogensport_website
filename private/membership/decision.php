@@ -51,65 +51,54 @@ function membership_easyverein_mandate_reference(int $memberId): string
 function membership_send_welcome_mail(array $row, string $mandateReference): void
 {
     $data = $row['data'];
-    $group = $data['group'];
-    $club = MEMBERSHIP_CLUB_NAME;
-    $applicantName = "{$data['applicant']['firstName']} {$data['applicant']['lastName']}";
-    $creditorId = membership_config()['creditor_id'] ?: '[Gläubiger-ID folgt]';
-    $mandate = $mandateReference !== '' ? ", Mandatsreferenz {$mandateReference}" : '';
+    $applicant = $data['applicant'];
+    $facts = membership_group_facts($data['group']) + [
+        'Zahlungsweise' => 'SEPA-Lastschrift',
+        'Gläubiger-ID' => membership_config()['creditor_id'] ?: 'folgt',
+    ];
+
+    if ($mandateReference !== '') {
+        $facts['Mandatsreferenz'] = $mandateReference;
+    }
+
     $announced = $mandateReference !== '' ? 'Betrag und Termin' : 'Betrag, Termin und Mandatsreferenz';
-    $fees = 'Beitrag: ' . ($group['amount'] !== null
-            ? membership_format_euro($group['amount']) . ' ' . membership_format_interval($group['intervalMonths'])
-            : '-')
-        . "\nAufnahmegebühr: " . ($group['admissionFee'] > 0 ? membership_format_euro($group['admissionFee']) . ' einmalig' : 'entfällt');
+    $admission = 'Mit der Annahme beginnt die vorläufige Mitgliedschaft; nach drei Monaten erfolgt die endgültige '
+        . 'Aufnahme durch den Vorstand (§ 4 Abs. 5 der Satzung).';
 
     if ($data['isMinor']) {
         $guardian = $data['guardian'];
-        $body = <<<TEXT
-            Hallo {$guardian['firstName']} {$guardian['lastName']},
-
-            der Vorstand hat den Mitgliedsantrag {$row['reference']} angenommen – herzlich willkommen,
-            {$applicantName}, im {$club}!
-
-            Mit der Annahme beginnt die vorläufige Mitgliedschaft; nach drei Monaten erfolgt die endgültige
-            Aufnahme durch den Vorstand (§ 4 Abs. 5 der Satzung).
-
-            Mitgliedsart: {$group['name']}
-            {$fees}
-
-            Die Beiträge ziehen wir per SEPA-Lastschrift ein (Gläubiger-ID {$creditorId}{$mandate}).
-            Vor der ersten Abbuchung informieren wir Sie über {$announced}.
-
-            Bei Fragen antworten Sie einfach auf diese E-Mail. Wir freuen uns auf {$data['applicant']['firstName']}!
-
-            Viele Grüße
-            {$club}
-            TEXT;
+        $mail = [
+            'title' => 'Willkommen im Verein!',
+            'preview' => "Der Mitgliedsantrag für {$applicant['firstName']} {$applicant['lastName']} wurde angenommen.",
+            'blocks' => [
+                ['text', "Guten Tag {$guardian['firstName']} {$guardian['lastName']},"],
+                ['text', "der Vorstand hat den Mitgliedsantrag für {$applicant['firstName']} {$applicant['lastName']} "
+                    . "angenommen – herzlich willkommen, {$applicant['firstName']}!"],
+                ['text', $admission],
+                ['facts', $facts],
+                ['text', "Vor der ersten Abbuchung informieren wir Sie über {$announced}."],
+                ['text', "Bei Fragen antworten Sie einfach auf diese E-Mail. Wir freuen uns auf {$applicant['firstName']}!"],
+            ],
+        ];
     } else {
-        $body = <<<TEXT
-            Hallo {$applicantName},
-
-            der Vorstand hat deinen Mitgliedsantrag {$row['reference']} angenommen – herzlich willkommen im {$club}!
-
-            Mit der Annahme beginnt die vorläufige Mitgliedschaft; nach drei Monaten erfolgt die endgültige
-            Aufnahme durch den Vorstand (§ 4 Abs. 5 der Satzung).
-
-            Mitgliedsart: {$group['name']}
-            {$fees}
-
-            Die Beiträge ziehen wir per SEPA-Lastschrift ein (Gläubiger-ID {$creditorId}{$mandate}).
-            Vor der ersten Abbuchung informieren wir dich über {$announced}.
-
-            Bei Fragen antworte einfach auf diese E-Mail. Wir freuen uns auf dich!
-
-            Viele Grüße
-            {$club}
-            TEXT;
+        $mail = [
+            'title' => 'Willkommen im Verein!',
+            'preview' => 'Dein Mitgliedsantrag wurde angenommen – schön, dass du dabei bist.',
+            'blocks' => [
+                ['text', "Hallo {$applicant['firstName']},"],
+                ['text', 'der Vorstand hat deinen Mitgliedsantrag angenommen – schön, dass du dabei bist!'],
+                ['text', $admission],
+                ['facts', $facts],
+                ['text', "Vor der ersten Abbuchung informieren wir dich über {$announced}."],
+                ['text', 'Bei Fragen antworte einfach auf diese E-Mail. Wir freuen uns auf dich!'],
+            ],
+        ];
     }
 
     membership_send_mail(
         membership_confirmation_email($data),
-        "Willkommen im {$club}!",
-        $body,
+        'Willkommen im ' . MEMBERSHIP_CLUB_NAME . '!',
+        $mail,
         [],
         membership_config()['board_email'] ?: null
     );

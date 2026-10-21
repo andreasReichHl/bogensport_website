@@ -91,19 +91,22 @@ function membership_try_sync(array $row): ?string
 function membership_send_sync_failed_mail(array $row, string $error): void
 {
     $boardEmail = membership_config()['board_email'];
-    $body = <<<TEXT
-        Der Online-Mitgliedsantrag {$row['reference']} konnte nach mehreren Versuchen nicht an easyVerein
-        übertragen werden. Bitte das Mitglied anhand des PDFs aus der ersten Mail manuell in easyVerein anlegen
-        oder nach Behebung des Fehlers erneut übertragen:
-
-            php private/membership/cron.php retry {$row['reference']}
-
-        Letzter Fehler:
-        {$error}
-        TEXT;
+    $mail = [
+        'title' => 'Übertragung an easyVerein fehlgeschlagen',
+        'signature' => false,
+        'blocks' => [
+            ['text', "Der Online-Mitgliedsantrag {$row['reference']} konnte nach mehreren Versuchen nicht an "
+                . 'easyVerein übertragen werden.'],
+            ['text', 'Bitte das Mitglied anhand der PDFs aus der ersten Mail manuell in easyVerein anlegen oder '
+                . 'nach Behebung des Fehlers erneut übertragen:'],
+            ['code', "php private/membership/cron.php retry {$row['reference']}"],
+            ['text', 'Letzter Fehler:'],
+            ['code', $error],
+        ],
+    ];
 
     try {
-        membership_send_mail($boardEmail, "Übertragung fehlgeschlagen: Mitgliedsantrag {$row['reference']}", $body);
+        membership_send_mail($boardEmail, "Übertragung fehlgeschlagen: Mitgliedsantrag {$row['reference']}", $mail);
     } catch (MembershipMailException $mailError) {
         error_log("Membership application {$row['reference']}: sync-failed alert mail failed: " . $mailError->getMessage());
     }
@@ -113,49 +116,52 @@ function membership_send_applicant_pdf_mail(array $row, array $pdfs): void
 {
     $data = $row['data'];
     $applicantName = "{$data['applicant']['firstName']} {$data['applicant']['lastName']}";
-    $club = MEMBERSHIP_CLUB_NAME;
     $reference = $row['reference'];
+    $facts = ['Antragsnummer' => $reference, 'Mitgliedsart' => $data['group']['name']];
 
     if ($data['isMinor']) {
         $guardian = $data['guardian'];
-        $parentHint = $guardian['managedBy'] === 'eltern'
-            ? "\n\nHaben Sie Ihren eigenen Mitgliedsantrag erst kürzlich gestellt, entscheidet der Vorstand über\n"
-                . 'diesen Antrag, sobald Ihr eigener Antrag angenommen ist.'
-            : '';
-        $body = <<<TEXT
-            Hallo {$guardian['firstName']} {$guardian['lastName']},
+        $blocks = [
+            ['text', "Guten Tag {$guardian['firstName']} {$guardian['lastName']},"],
+            ['text', "vielen Dank! Der Mitgliedsantrag für {$applicantName} ist bestätigt und beim Vorstand "
+                . 'eingegangen. Im Anhang finden Sie den Antrag und das SEPA-Lastschriftmandat als PDF – bitte '
+                . 'bewahren Sie beides auf.'],
+            ['facts', ['Antragsteller/in' => $applicantName] + $facts],
+            ['text', 'Über die Aufnahme entscheidet der Vorstand; Sie erhalten dann eine Nachricht von uns. Mit der '
+                . 'Annahme beginnt die vorläufige Mitgliedschaft (§ 4 der Satzung).'],
+        ];
 
-            vielen Dank! Der Mitgliedsantrag {$reference} für {$applicantName} ist bestätigt und beim Vorstand
-            eingegangen. Im Anhang finden Sie den Mitgliedsantrag und das SEPA-Lastschriftmandat als PDF -
-            bitte bewahren Sie beides auf.
+        if ($guardian['managedBy'] === 'eltern') {
+            $blocks[] = ['text', 'Haben Sie Ihren eigenen Mitgliedsantrag erst kürzlich gestellt, entscheidet der '
+                . 'Vorstand über diesen Antrag, sobald Ihr eigener Antrag angenommen ist.'];
+        }
 
-            Über die Aufnahme entscheidet der Vorstand. Mit Annahme des Antrags beginnt die vorläufige
-            Mitgliedschaft (§ 4 der Satzung).{$parentHint}
-
-            Bei Fragen antworten Sie einfach auf diese E-Mail.
-
-            Viele Grüße
-            {$club}
-            TEXT;
+        $blocks[] = ['text', 'Bei Fragen antworten Sie einfach auf diese E-Mail.'];
+        $mail = [
+            'title' => 'Der Mitgliedsantrag ist eingegangen',
+            'preview' => "Der Mitgliedsantrag für {$applicantName} ist bestätigt – die Unterlagen finden Sie im Anhang.",
+            'blocks' => $blocks,
+        ];
     } else {
-        $body = <<<TEXT
-            Hallo {$applicantName},
-
-            vielen Dank! Dein Mitgliedsantrag {$reference} ist bestätigt und beim Vorstand eingegangen. Im Anhang
-            findest du den Mitgliedsantrag und das SEPA-Lastschriftmandat als PDF - bitte bewahre beides auf.
-
-            Über die Aufnahme entscheidet der Vorstand. Mit Annahme des Antrags beginnt die vorläufige
-            Mitgliedschaft (§ 4 der Satzung). Bei Fragen antworte einfach auf diese E-Mail.
-
-            Viele Grüße
-            {$club}
-            TEXT;
+        $mail = [
+            'title' => 'Dein Mitgliedsantrag ist eingegangen',
+            'preview' => 'Dein Antrag ist bestätigt – die Unterlagen findest du im Anhang.',
+            'blocks' => [
+                ['text', "Hallo {$data['applicant']['firstName']},"],
+                ['text', 'vielen Dank! Dein Mitgliedsantrag ist bestätigt und beim Vorstand eingegangen. Im Anhang '
+                    . 'findest du den Antrag und das SEPA-Lastschriftmandat als PDF – bitte bewahre beides auf.'],
+                ['facts', $facts],
+                ['text', 'Über die Aufnahme entscheidet der Vorstand; du erhältst dann eine Nachricht von uns. Mit '
+                    . 'der Annahme beginnt die vorläufige Mitgliedschaft (§ 4 der Satzung).'],
+                ['text', 'Bei Fragen antworte einfach auf diese E-Mail.'],
+            ],
+        ];
     }
 
     membership_send_mail(
         membership_confirmation_email($data),
         "Mitgliedsantrag {$reference} ist eingegangen",
-        $body,
+        $mail,
         $pdfs
     );
 }
@@ -170,57 +176,55 @@ function membership_send_board_mail(array $row, array $pdfs, string $syncOutcome
 
     $data = $row['data'];
     $applicant = $data['applicant'];
-    $groupSummary = membership_group_summary($data['group']);
-    $submitted = membership_format_datetime($row['submitted_at']);
-    $confirmed = membership_format_datetime($row['confirmed_at']);
     $notes = [];
 
     if ($data['isMinor']) {
         $guardian = $data['guardian'];
-        $notes[] = "- Minderjährig. Erziehungsberechtigte/r: {$guardian['firstName']} {$guardian['lastName']} "
+        $notes[] = "Minderjährig. Erziehungsberechtigte/r: {$guardian['firstName']} {$guardian['lastName']} "
             . "<{$guardian['email']}>";
         $notes[] = $guardian['managedBy'] === 'eltern'
-            ? '- Verwaltung: zusammen mit der Mitgliedschaft der/des Erziehungsberechtigten. Ist deren/dessen'
+            ? 'Verwaltung: zusammen mit der Mitgliedschaft der/des Erziehungsberechtigten. Ist deren/dessen'
                 . ' eigener Antrag noch offen, bitte zuerst diesen annehmen.'
-            : '- Verwaltung: eigenständige Mitgliedschaft.';
+            : 'Verwaltung: eigenständige Mitgliedschaft.';
     }
 
     if (!$data['consents']['fotos']['accepted']) {
-        $notes[] = '- KEINE Einwilligung zur Veröffentlichung von Fotos.';
+        $notes[] = 'KEINE Einwilligung zur Veröffentlichung von Fotos.';
     }
+
+    $blocks = [
+        ['facts', [
+            'Antragsnummer' => $row['reference'],
+            'Name' => "{$applicant['firstName']} {$applicant['lastName']}",
+            'Geburtsdatum' => membership_format_date($applicant['dateOfBirth']),
+        ] + membership_group_facts($data['group']) + [
+            'Abgesendet' => membership_format_datetime($row['submitted_at']),
+            'Bestätigt' => membership_format_datetime($row['confirmed_at']) . " (IP {$row['confirmed_ip']})",
+        ]],
+    ];
 
     if ($syncOutcome !== '') {
-        $notes[] = "- easyVerein: {$syncOutcome}";
+        $blocks[] = ['text', $syncOutcome];
     }
 
-    $notesText = $notes !== [] ? "Hinweise:\n" . implode("\n", $notes) . "\n\n" : '';
+    if ($notes !== []) {
+        $blocks[] = ['text', 'Hinweise:'];
+        $blocks[] = ['list', $notes];
+    }
 
-    $body = <<<TEXT
-        Neuer Online-Mitgliedsantrag {$row['reference']}
-
-        Name: {$applicant['firstName']} {$applicant['lastName']}
-        Geburtsdatum: {$applicant['dateOfBirth']}
-        {$groupSummary}
-
-        Abgesendet: {$submitted}
-        Bestätigt:  {$confirmed} (IP {$row['confirmed_ip']})
-
-        {$notesText}Alle Angaben stehen in den beiden angehängten PDFs (Mitgliedsantrag und SEPA-Lastschriftmandat).
-        Die Prüfsumme in den PDFs lässt sich auf dem Server prüfen mit:
-        php private/membership/verify.php {$row['reference']}
-
-        Entscheidung in easyVerein unter den Mitgliedsanträgen: Bitte den Antrag ANNEHMEN oder ABLEHNEN,
-        nicht löschen. Beim Ablehnen entfernt easyVerein Mitglied und Kontaktdaten sofort; beim Löschen
-        landet das Mitglied 30 Tage im Papierkorb und Adresse und Bankverbindung bleiben so lange gespeichert.
-        Nach der Annahme erhält das neue Mitglied automatisch eine Willkommens-Mail von der Website.
-
-        Antworten auf diese E-Mail gehen direkt an den Antragsteller bzw. die Erziehungsberechtigten.
-        TEXT;
+    $blocks[] = ['text', 'Alle Angaben stehen in den beiden angehängten PDFs (Mitgliedsantrag und '
+        . 'SEPA-Lastschriftmandat). Die Prüfsumme in den PDFs lässt sich auf dem Server prüfen mit:'];
+    $blocks[] = ['code', "php private/membership/verify.php {$row['reference']}"];
+    $blocks[] = ['text', 'Entscheidung in easyVerein unter den Mitgliedsanträgen: Bitte den Antrag ANNEHMEN oder '
+        . 'ABLEHNEN, nicht löschen. Beim Ablehnen entfernt easyVerein Mitglied und Kontaktdaten sofort; beim '
+        . 'Löschen landet das Mitglied 30 Tage im Papierkorb, und Adresse und Bankverbindung bleiben so lange '
+        . 'gespeichert. Nach der Annahme erhält das neue Mitglied automatisch eine Willkommens-Mail von der Website.'];
+    $blocks[] = ['note', 'Antworten auf diese E-Mail gehen direkt an den Antragsteller bzw. die Erziehungsberechtigten.'];
 
     membership_send_mail(
         $boardEmail,
         "Neuer Mitgliedsantrag {$row['reference']}: {$applicant['firstName']} {$applicant['lastName']}",
-        $body,
+        ['title' => 'Neuer Mitgliedsantrag', 'signature' => false, 'blocks' => $blocks],
         $pdfs,
         membership_confirmation_email($data)
     );
