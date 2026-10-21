@@ -9,7 +9,8 @@
  *   2. POST /contact-details  (person, address, bank account, SEPA mandate date)
  *   3. POST /member           (login, is_application, link to a parent's account)
  *   4. POST /member-group-assignment (membership type -> fee)
- *   5. PATCH /member/{id}     (upload the application PDF and the SEPA mandate PDF)
+ *   5. PATCH /member/{id}     (upload the application PDF and the SEPA mandate PDF, the latter
+ *                              as declaration of consent and as SEPA mandate document)
  */
 
 require_once __DIR__ . '/pdf.php';
@@ -342,7 +343,8 @@ function membership_sync_application(int $id): string
         membership_mark_step($id, 'easyverein_group_assigned_at', $now);
     }
 
-    // 5. Application PDF as application document, SEPA mandate PDF as SEPA mandate document
+    // 5. Application PDF as application document. The SEPA mandate PDF goes in as declaration of
+    // consent, which easyVerein shows with the application, and as SEPA mandate document.
     if ($row['easyverein_files_uploaded_at'] === null) {
         easyverein_api_upload(
             "/member/{$memberId}",
@@ -351,13 +353,18 @@ function membership_sync_application(int $id): string
             membership_application_pdf_filename($row['reference']),
             'application/pdf'
         );
-        easyverein_api_upload(
-            "/member/{$memberId}",
-            'sepa_mandate_file',
-            membership_render_sepa_pdf($row),
-            membership_sepa_pdf_filename($row['reference']),
-            'application/pdf'
-        );
+        $sepaPdf = membership_render_sepa_pdf($row);
+
+        foreach (['declaration_of_consent', 'sepa_mandate_file'] as $field) {
+            easyverein_api_upload(
+                "/member/{$memberId}",
+                $field,
+                $sepaPdf,
+                membership_sepa_pdf_filename($row['reference']),
+                'application/pdf'
+            );
+        }
+
         membership_mark_step($id, 'easyverein_files_uploaded_at', $now);
     }
 
