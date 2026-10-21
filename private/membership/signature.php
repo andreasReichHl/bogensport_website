@@ -14,7 +14,8 @@
 require_once __DIR__ . '/applications.php';
 require_once __DIR__ . '/validation.php';
 
-const MEMBERSHIP_SIGNATURE_VERSION = 1;
+// 2: without the mandate reference (assigned by the club only on admission, not by the form).
+const MEMBERSHIP_SIGNATURE_VERSION = 2;
 
 /**
  * JSON with object keys sorted recursively, so the same data always yields the same bytes.
@@ -39,15 +40,6 @@ function membership_canonical_json(mixed $value): string
 }
 
 /**
- * SEPA mandate reference (max. 35 characters) - derived from the application reference, so it
- * needs no extra storage and is unique per application.
- */
-function membership_mandate_reference(string $reference): string
-{
-    return 'BOBS-' . $reference;
-}
-
-/**
  * Everything the signature covers - the application as declared plus the confirmation proof.
  */
 function membership_signed_payload(array $row): array
@@ -55,7 +47,6 @@ function membership_signed_payload(array $row): array
     return [
         'version' => MEMBERSHIP_SIGNATURE_VERSION,
         'reference' => $row['reference'],
-        'mandateReference' => membership_mandate_reference($row['reference']),
         'submittedAt' => $row['submitted_at'],
         'confirmedAt' => $row['confirmed_at'],
         'confirmedIp' => $row['confirmed_ip'],

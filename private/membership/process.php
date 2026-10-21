@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Everything that happens after an application was confirmed: sign it, render the PDF, mail
- * it to the applicant and to the board (later also: transfer to easyVerein).
+ * Everything that happens after an application was confirmed: sign it, render the PDFs, mail
+ * them to the applicant and to the board (later also: transfer to easyVerein).
  *
  * Each step is recorded in its own column and only done if not yet recorded, so this can be
  * run again any time (e.g. after a failed mail) without sending anything twice.
@@ -30,15 +30,11 @@ function membership_process_confirmed(int $id): array
         membership_mark_step($id, 'signature', $row['signature']);
     }
 
-    $pdf = [
-        'content' => membership_render_pdf($row),
-        'filename' => membership_pdf_filename($row['reference']),
-        'type' => 'application/pdf',
-    ];
+    $pdfs = membership_render_pdfs($row);
 
     if ($row['applicant_mailed_at'] === null) {
         try {
-            membership_send_applicant_pdf_mail($row, $pdf);
+            membership_send_applicant_pdf_mail($row, $pdfs);
             membership_mark_step($id, 'applicant_mailed_at', $now);
         } catch (MembershipMailException $error) {
             error_log("Membership application {$row['reference']}: applicant mail failed: " . $error->getMessage());
@@ -56,7 +52,7 @@ function membership_process_confirmed(int $id): array
 
     if ($row['board_mailed_at'] === null) {
         try {
-            membership_send_board_mail($row, $pdf, $syncOutcome);
+            membership_send_board_mail($row, $pdfs, $syncOutcome);
             membership_mark_step($id, 'board_mailed_at', $now);
         } catch (MembershipMailException $error) {
             error_log("Membership application {$row['reference']}: board mail failed: " . $error->getMessage());
@@ -113,7 +109,7 @@ function membership_send_sync_failed_mail(array $row, string $error): void
     }
 }
 
-function membership_send_applicant_pdf_mail(array $row, array $pdf): void
+function membership_send_applicant_pdf_mail(array $row, array $pdfs): void
 {
     $data = $row['data'];
     $applicantName = "{$data['applicant']['firstName']} {$data['applicant']['lastName']}";
@@ -130,7 +126,8 @@ function membership_send_applicant_pdf_mail(array $row, array $pdf): void
             Hallo {$guardian['firstName']} {$guardian['lastName']},
 
             vielen Dank! Der Mitgliedsantrag {$reference} für {$applicantName} ist bestätigt und beim Vorstand
-            eingegangen. Im Anhang finden Sie alle Angaben als PDF - bitte bewahren Sie es auf.
+            eingegangen. Im Anhang finden Sie den Mitgliedsantrag und das SEPA-Lastschriftmandat als PDF -
+            bitte bewahren Sie beides auf.
 
             Über die Aufnahme entscheidet der Vorstand. Mit Annahme des Antrags beginnt die vorläufige
             Mitgliedschaft (§ 4 der Satzung).{$parentHint}
@@ -145,7 +142,7 @@ function membership_send_applicant_pdf_mail(array $row, array $pdf): void
             Hallo {$applicantName},
 
             vielen Dank! Dein Mitgliedsantrag {$reference} ist bestätigt und beim Vorstand eingegangen. Im Anhang
-            findest du alle Angaben als PDF - bitte bewahre es auf.
+            findest du den Mitgliedsantrag und das SEPA-Lastschriftmandat als PDF - bitte bewahre beides auf.
 
             Über die Aufnahme entscheidet der Vorstand. Mit Annahme des Antrags beginnt die vorläufige
             Mitgliedschaft (§ 4 der Satzung). Bei Fragen antworte einfach auf diese E-Mail.
@@ -159,11 +156,11 @@ function membership_send_applicant_pdf_mail(array $row, array $pdf): void
         membership_confirmation_email($data),
         "Mitgliedsantrag {$reference} ist eingegangen",
         $body,
-        [$pdf]
+        $pdfs
     );
 }
 
-function membership_send_board_mail(array $row, array $pdf, string $syncOutcome): void
+function membership_send_board_mail(array $row, array $pdfs, string $syncOutcome): void
 {
     $boardEmail = membership_config()['board_email'];
 
@@ -208,8 +205,9 @@ function membership_send_board_mail(array $row, array $pdf, string $syncOutcome)
         Abgesendet: {$submitted}
         Bestätigt:  {$confirmed} (IP {$row['confirmed_ip']})
 
-        {$notesText}Alle Angaben inkl. SEPA-Mandat stehen im angehängten PDF. Die Prüfsumme im PDF lässt sich auf dem
-        Server prüfen mit: php private/membership/verify.php {$row['reference']}
+        {$notesText}Alle Angaben stehen in den beiden angehängten PDFs (Mitgliedsantrag und SEPA-Lastschriftmandat).
+        Die Prüfsumme in den PDFs lässt sich auf dem Server prüfen mit:
+        php private/membership/verify.php {$row['reference']}
 
         Entscheidung in easyVerein unter den Mitgliedsanträgen: Bitte den Antrag ANNEHMEN oder ABLEHNEN,
         nicht löschen. Beim Ablehnen entfernt easyVerein Mitglied und Kontaktdaten sofort; beim Löschen
@@ -223,7 +221,7 @@ function membership_send_board_mail(array $row, array $pdf, string $syncOutcome)
         $boardEmail,
         "Neuer Mitgliedsantrag {$row['reference']}: {$applicant['firstName']} {$applicant['lastName']}",
         $body,
-        [$pdf],
+        $pdfs,
         membership_confirmation_email($data)
     );
 }

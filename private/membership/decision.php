@@ -30,14 +30,33 @@ function membership_easyverein_decision(int $memberId): string
     return ($member['is_application'] ?? true) === false ? 'accepted' : 'open';
 }
 
-function membership_send_welcome_mail(array $row): void
+/**
+ * The SEPA mandate reference as entered in easyVerein - the club assigns it only on admission,
+ * so it may still be empty right after the acceptance. '' if it can't be read: the welcome
+ * mail then goes out without it rather than not at all.
+ */
+function membership_easyverein_mandate_reference(int $memberId): string
+{
+    try {
+        $member = easyverein_api_get("/member/{$memberId}", ['query' => '{contact_details{sepa_mandate}}']);
+    } catch (EasyvereinApiException $error) {
+        error_log("easyVerein member {$memberId}: mandate reference not readable: " . $error->getMessage());
+
+        return '';
+    }
+
+    return trim((string)($member['contact_details']['sepa_mandate'] ?? ''));
+}
+
+function membership_send_welcome_mail(array $row, string $mandateReference): void
 {
     $data = $row['data'];
     $group = $data['group'];
     $club = MEMBERSHIP_CLUB_NAME;
     $applicantName = "{$data['applicant']['firstName']} {$data['applicant']['lastName']}";
-    $mandateReference = membership_mandate_reference($row['reference']);
     $creditorId = membership_config()['creditor_id'] ?: '[Gläubiger-ID folgt]';
+    $mandate = $mandateReference !== '' ? ", Mandatsreferenz {$mandateReference}" : '';
+    $announced = $mandateReference !== '' ? 'Betrag und Termin' : 'Betrag, Termin und Mandatsreferenz';
     $fees = 'Beitrag: ' . ($group['amount'] !== null
             ? membership_format_euro($group['amount']) . ' ' . membership_format_interval($group['intervalMonths'])
             : '-')
@@ -57,8 +76,8 @@ function membership_send_welcome_mail(array $row): void
             Mitgliedsart: {$group['name']}
             {$fees}
 
-            Die Beiträge ziehen wir per SEPA-Lastschrift ein (Gläubiger-ID {$creditorId}, Mandatsreferenz
-            {$mandateReference}). Vor der ersten Abbuchung informieren wir Sie über Betrag und Termin.
+            Die Beiträge ziehen wir per SEPA-Lastschrift ein (Gläubiger-ID {$creditorId}{$mandate}).
+            Vor der ersten Abbuchung informieren wir Sie über {$announced}.
 
             Bei Fragen antworten Sie einfach auf diese E-Mail. Wir freuen uns auf {$data['applicant']['firstName']}!
 
@@ -77,8 +96,8 @@ function membership_send_welcome_mail(array $row): void
             Mitgliedsart: {$group['name']}
             {$fees}
 
-            Die Beiträge ziehen wir per SEPA-Lastschrift ein (Gläubiger-ID {$creditorId}, Mandatsreferenz
-            {$mandateReference}). Vor der ersten Abbuchung informieren wir dich über Betrag und Termin.
+            Die Beiträge ziehen wir per SEPA-Lastschrift ein (Gläubiger-ID {$creditorId}{$mandate}).
+            Vor der ersten Abbuchung informieren wir dich über {$announced}.
 
             Bei Fragen antworte einfach auf diese E-Mail. Wir freuen uns auf dich!
 
@@ -118,7 +137,10 @@ function membership_follow_up_decisions(): array
 
         if ($decision === 'accepted') {
             try {
-                membership_send_welcome_mail($row);
+                membership_send_welcome_mail(
+                    $row,
+                    membership_easyverein_mandate_reference((int)$row['easyverein_member_id'])
+                );
             } catch (MembershipMailException $error) {
                 // Keep the application, the next run tries again.
                 error_log("Membership application {$row['reference']}: welcome mail failed: " . $error->getMessage());

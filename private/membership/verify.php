@@ -2,7 +2,7 @@
 
 /**
  * CLI: checks the signature of an application, i.e. whether the data stored for it still
- * matches the checksum printed on its PDF.
+ * matches the checksum printed on its PDFs (application and SEPA mandate).
  *
  *   php private/membership/verify.php OM-2026-XXXXXX
  */
@@ -34,7 +34,7 @@ if ($row['signature'] === null) {
 echo "Gespeicherte Prüfsumme: " . membership_format_signature($row['signature']) . "\n";
 
 if (membership_signature_is_valid($row)) {
-    echo "OK – die gespeicherten Daten passen zur Prüfsumme. Stimmt sie mit der im PDF überein, ist das PDF unverändert.\n";
+    echo "OK – die gespeicherten Daten passen zur Prüfsumme. Stimmt sie mit der in den PDFs überein, sind die PDFs unverändert.\n";
     exit(0);
 }
 

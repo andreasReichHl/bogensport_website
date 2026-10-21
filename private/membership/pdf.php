@@ -1,10 +1,12 @@
 <?php
 
 /**
- * PDF summary of a confirmed membership application (tFPDF, UTF-8 via DejaVu fonts).
+ * PDFs of a confirmed membership application (tFPDF, UTF-8 via DejaVu fonts): the application
+ * itself and, as a separate document, the SEPA direct debit mandate. Both carry the same
+ * checksum, which covers the whole application.
  *
- * Rendered on demand from the stored (encrypted) data - the PDF itself is never stored, so
- * it always shows exactly what the signature covers.
+ * Rendered on demand from the stored (encrypted) data - the PDFs themselves are never stored,
+ * so they always show exactly what the signature covers.
  */
 
 require_once __DIR__ . '/signature.php';
@@ -31,7 +33,7 @@ class MembershipApplicationPdf extends tFPDF
 
     public function sectionTitle(string $title): void
     {
-        $this->Ln(4);
+        $this->Ln(3);
         $this->SetFont('DejaVu', 'B', 11);
         $this->SetTextColor(...MEMBERSHIP_PDF_BLUE);
         $this->Cell(0, 7, $title, 'B', 1);
@@ -42,9 +44,9 @@ class MembershipApplicationPdf extends tFPDF
     public function row(string $label, string $value): void
     {
         $this->SetFont('DejaVu', 'B', 9.5);
-        $this->Cell(MEMBERSHIP_PDF_LABEL_WIDTH, 5.5, $label);
+        $this->Cell(MEMBERSHIP_PDF_LABEL_WIDTH, 5, $label);
         $this->SetFont('DejaVu', '', 9.5);
-        $this->MultiCell(0, 5.5, $value !== '' ? $value : '–', 0, 'L');
+        $this->MultiCell(0, 5, $value !== '' ? $value : '–', 0, 'L');
     }
 
     public function paragraph(string $text, float $size = 9): void
@@ -84,23 +86,18 @@ function membership_format_iban(string $iban): string
     return trim(chunk_split($iban, 4, ' '));
 }
 
-function membership_render_pdf(array $row): string
+/**
+ * Starts a document with the club header and the box proving submission and confirmation.
+ */
+function membership_pdf_start(array $row, string $title): MembershipApplicationPdf
 {
-    $data = $row['data'];
-    $applicant = $data['applicant'];
-    $guardian = $data['guardian'];
-    $group = $data['group'];
-    $bank = $data['bank'];
     $signature = $row['signature'] ?? membership_compute_signature($row);
-    $mandateReference = membership_mandate_reference($row['reference']);
-    $creditorId = membership_config()['creditor_id'] ?: '[Gläubiger-ID folgt]';
-    $genders = ['w' => 'weiblich', 'm' => 'männlich', 'd' => 'divers'];
 
     $pdf = new MembershipApplicationPdf('P', 'mm', 'A4');
     $pdf->AddFont('DejaVu', '', 'DejaVuSans.ttf', true);
     $pdf->AddFont('DejaVu', 'B', 'DejaVuSans-Bold.ttf', true);
     $pdf->AddFont('DejaVuMono', '', 'DejaVuSansMono.ttf', true);
-    $pdf->SetTitle("Mitgliedsantrag {$row['reference']}", true);
+    $pdf->SetTitle("{$title} {$row['reference']}", true);
     $pdf->SetAuthor(MEMBERSHIP_CLUB_NAME, true);
     $pdf->SetCreator('Online-Mitgliedsantrag ' . MEMBERSHIP_CLUB_NAME, true);
     $pdf->SetMargins(20, 18, 20);
@@ -115,7 +112,7 @@ function membership_render_pdf(array $row): string
     $pdf->Cell(0, 9, MEMBERSHIP_CLUB_NAME, 0, 1);
     $pdf->SetFont('DejaVu', '', 12);
     $pdf->SetTextColor(0, 0, 0);
-    $pdf->Cell(0, 7, 'Online-Mitgliedsantrag (Beitrittserklärung)', 0, 1);
+    $pdf->Cell(0, 7, $title, 0, 1);
     $pdf->Ln(3);
 
     // Status box: what this document proves.
@@ -130,7 +127,7 @@ function membership_render_pdf(array $row): string
     $pdf->row('Abgesendet am', membership_format_datetime($row['submitted_at']));
     $pdf->row('Bestätigt am', membership_format_datetime($row['confirmed_at']));
     $pdf->row('Bestätigt von IP-Adresse', (string)$row['confirmed_ip']);
-    $pdf->row('Bestätigt über E-Mail', membership_confirmation_email($data));
+    $pdf->row('Bestätigt über E-Mail', membership_confirmation_email($row['data']));
     $pdf->SetLeftMargin(20);
     $pdf->Ln(2);
     $pdf->SetDrawColor(...MEMBERSHIP_PDF_GREEN);
@@ -139,6 +136,37 @@ function membership_render_pdf(array $row): string
     $pdf->SetLineWidth(0.2);
     $pdf->SetDrawColor(...MEMBERSHIP_PDF_GREY);
     $pdf->Ln(3);
+
+    return $pdf;
+}
+
+function membership_pdf_finish(MembershipApplicationPdf $pdf, array $row): string
+{
+    // Keep the section in one piece: start a new page if it would be split.
+    if ($pdf->GetY() > 297 - 22 - 34) {
+        $pdf->AddPage();
+    }
+
+    $pdf->sectionTitle('Prüfsumme');
+    $pdf->paragraph('Automatisch erstellt und ohne Unterschrift gültig. Die Prüfsumme (HMAC-SHA256) wird aus allen '
+        . 'Angaben des Antrags einschließlich SEPA-Lastschriftmandat und dem Bestätigungsnachweis gebildet und steht '
+        . 'gleichlautend auf beiden Dokumenten. Damit kann der Verein prüfen, ob die Angaben unverändert sind.', 8.5);
+    $pdf->Ln(2);
+    $pdf->SetFont('DejaVuMono', '', 9.5);
+    $pdf->MultiCell(0, 5, membership_format_signature($row['signature'] ?? membership_compute_signature($row)), 0, 'L');
+
+    return $pdf->Output('S');
+}
+
+function membership_render_application_pdf(array $row): string
+{
+    $data = $row['data'];
+    $applicant = $data['applicant'];
+    $guardian = $data['guardian'];
+    $group = $data['group'];
+    $genders = ['w' => 'weiblich', 'm' => 'männlich', 'd' => 'divers'];
+
+    $pdf = membership_pdf_start($row, 'Online-Mitgliedsantrag (Beitrittserklärung)');
     $pdf->SetTextColor(...MEMBERSHIP_PDF_GREY);
     $pdf->paragraph('Dies ist die Bestätigung über die Einreichung des Antrags, noch keine Aufnahmebestätigung. Über die '
         . 'Aufnahme entscheidet der Vorstand; mit Annahme des Antrags beginnt die vorläufige Mitgliedschaft '
@@ -153,6 +181,7 @@ function membership_render_pdf(array $row): string
     }
 
     $pdf->row('Aufnahmegebühr', $group['admissionFee'] > 0 ? membership_format_euro($group['admissionFee']) . ' einmalig' : 'entfällt');
+    $pdf->row('Zahlungsweise', 'SEPA-Lastschrift (siehe separates SEPA-Lastschriftmandat)');
 
     $pdf->sectionTitle('Antragsteller/in');
     $pdf->row('Name', trim("{$applicant['salutation']} {$applicant['firstName']} {$applicant['lastName']}"));
@@ -171,17 +200,6 @@ function membership_render_pdf(array $row): string
         $pdf->row('Verwaltung', $guardian['managedByText']);
     }
 
-    $pdf->sectionTitle('SEPA-Lastschriftmandat');
-    $pdf->row('Zahlungsempfänger', MEMBERSHIP_CLUB_NAME);
-    $pdf->row('Gläubiger-ID', $creditorId);
-    $pdf->row('Mandatsreferenz', $mandateReference);
-    $pdf->row('Kontoinhaber/in', $bank['accountHolder']);
-    $pdf->row('IBAN', membership_format_iban($bank['iban']));
-    $pdf->row('BIC', $bank['bic']);
-    $pdf->row('Erteilt am', membership_format_datetime($row['confirmed_at']) . ' (durch Bestätigung des Antrags)');
-    $pdf->Ln(1.5);
-    $pdf->paragraph($data['consents']['sepa']['text']);
-
     $pdf->sectionTitle('Erklärungen');
 
     foreach ($data['consents'] as $key => $consent) {
@@ -198,18 +216,65 @@ function membership_render_pdf(array $row): string
     );
     $pdf->SetTextColor(0, 0, 0);
 
-    $pdf->sectionTitle('Prüfsumme');
-    $pdf->paragraph('Dieses Dokument wurde automatisch erstellt und ist ohne Unterschrift gültig. Die Prüfsumme '
-        . '(HMAC-SHA256) wird aus allen oben stehenden Angaben und dem Bestätigungsnachweis gebildet. Der Verein kann '
-        . 'anhand der bei ihm gespeicherten Daten jederzeit prüfen, ob die Angaben in diesem Dokument unverändert sind.');
-    $pdf->Ln(2);
-    $pdf->SetFont('DejaVuMono', '', 9.5);
-    $pdf->MultiCell(0, 5, membership_format_signature($signature), 0, 'L');
-
-    return $pdf->Output('S');
+    return membership_pdf_finish($pdf, $row);
 }
 
-function membership_pdf_filename(string $reference): string
+function membership_render_sepa_pdf(array $row): string
+{
+    $data = $row['data'];
+    $applicant = $data['applicant'];
+    $bank = $data['bank'];
+
+    $pdf = membership_pdf_start($row, 'SEPA-Lastschriftmandat');
+
+    $pdf->sectionTitle('Zahlungsempfänger');
+    $pdf->row('Name', MEMBERSHIP_CLUB_NAME);
+    $pdf->row('Gläubiger-ID', membership_config()['creditor_id'] ?: '[Gläubiger-ID folgt]');
+    $pdf->row('Mandatsreferenz', 'wird nach der Aufnahme mitgeteilt');
+    $pdf->row('Zahlungsart', 'Wiederkehrende Zahlungen');
+
+    $pdf->sectionTitle('Zahlungspflichtige/r');
+    $pdf->row('Kontoinhaber/in', $bank['accountHolder']);
+    $pdf->row('IBAN', membership_format_iban($bank['iban']));
+    $pdf->row('BIC', $bank['bic']);
+    $pdf->row('Für die Mitgliedschaft von', "{$applicant['firstName']} {$applicant['lastName']}, "
+        . "{$applicant['street']}, {$applicant['zip']} {$applicant['city']}");
+
+    $pdf->sectionTitle('Mandat');
+    $pdf->paragraph($data['consents']['sepa']['text']);
+    $pdf->Ln(1.5);
+    $pdf->row('Erteilt am', membership_format_datetime($row['confirmed_at']) . ' (durch Bestätigung des Antrags)');
+
+    return membership_pdf_finish($pdf, $row);
+}
+
+/**
+ * Both documents as mail attachments: application first, then the SEPA mandate.
+ *
+ * @return list<array{content: string, filename: string, type: string}>
+ */
+function membership_render_pdfs(array $row): array
+{
+    return [
+        [
+            'content' => membership_render_application_pdf($row),
+            'filename' => membership_application_pdf_filename($row['reference']),
+            'type' => 'application/pdf',
+        ],
+        [
+            'content' => membership_render_sepa_pdf($row),
+            'filename' => membership_sepa_pdf_filename($row['reference']),
+            'type' => 'application/pdf',
+        ],
+    ];
+}
+
+function membership_application_pdf_filename(string $reference): string
 {
     return "Mitgliedsantrag-{$reference}.pdf";
+}
+
+function membership_sepa_pdf_filename(string $reference): string
+{
+    return "SEPA-Lastschriftmandat-{$reference}.pdf";
 }
