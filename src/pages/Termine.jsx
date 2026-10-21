@@ -40,7 +40,7 @@ export default function Termine() {
       />
 
       <main className="bg-slate-50">
-        <div className="relative max-w-8xl px-5 pb-16 sm:px-8 lg:px-12 lg:pb-24">
+        <div className="relative mx-auto max-w-7xl px-5 pb-16 sm:px-8 lg:px-12 lg:pb-24">
           <article className="p-6 sm:p-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h1 className="font-heading text-3xl font-bold text-slate-900">Alle Termine</h1>

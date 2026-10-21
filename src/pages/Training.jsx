@@ -28,7 +28,7 @@ export default function Training() {
             />
 
             <main className="bg-slate-50">
-                <div className="relative max-w-8xl px-5 pb-16 sm:px-8 lg:px-12 lg:pb-24">
+                <div className="relative mx-auto max-w-7xl px-5 pb-16 sm:px-8 lg:px-12 lg:pb-24">
                     <article className="p-6 sm:p-10">
                         <div className="space-y-10">
                             <ContentSection title="Training - wann und wo?">
