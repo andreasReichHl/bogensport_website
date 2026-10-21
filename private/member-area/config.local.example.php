@@ -31,6 +31,8 @@ return array (
   // production: php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'
   'membership' => 
   array (
+    // false until the online application goes live (beitritt-*.php then answer 404).
+    'enabled' => true,
     'satzung_version' => '2009-10-02',
     'data_key' => 'hhNYcvJDKvdNznPL26gvxFw3PgWVxCOEM+mKvGMg96c=',
     'signature_key' => '1ENls6HHtfzqWFStDBZ9bOC1/prc1doHM/Re5poMb2s=',

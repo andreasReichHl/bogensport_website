@@ -83,6 +83,8 @@ Der API-Token wird automatisch verwaltet (`private/easyverein/token.php`): er li
 
 Eigenes Beitrittsformular, das ausschließlich die easyVerein-API nutzt (kein easyVerein-Iframe). Ablauf: Formular → Speicherung als `pending` → Bestätigungslink per Mail (Double-Opt-in) → Übertragung an easyVerein als Mitgliedsantrag (`is_application`) + PDF an den Antragsteller.
 
+- **Noch nicht live:** Seite `/mitglied-werden`, Footer-Link, Abschnitt auf der Vereinsseite und der Datenschutz-Abschnitt erscheinen nur im Dev-Server oder in einem Build mit `VITE_MEMBERSHIP_ENABLED=true npm run build` (`src/utils/features.js`). Die Endpunkte `beitritt-*.php` antworten mit 404, solange in der `config.local.php` nicht `membership.enabled => true` steht. Zum Go-live beides einschalten.
+
 - `public/beitritt-formular.php` (GET) liefert die Mitgliedsarten und den Wortlaut aller Erklärungen (`private/membership/texts.php`, versioniert über `MEMBERSHIP_TEXTS_VERSION`).
 - `public/beitritt-absenden.php` (POST, JSON) validiert serverseitig, speichert in `membership_applications` und verschickt den Bestätigungslink per Mail (SMTP über PHPMailer, `private/vendor/phpmailer/`). Schlägt der Mailversand fehl, wird der Antrag wieder gelöscht. Die Antragsdaten (inkl. IBAN) liegen dort **verschlüsselt** (libsodium); unbestätigte Anträge werden nach `confirm_ttl_hours` gelöscht. Spam-Schutz: Honeypot-Feld + Limits pro IP und E-Mail.
 - `/mitglied-werden/bestaetigen?token=…` zeigt den Antrag (`beitritt-pruefen.php`); **bestätigt wird erst per Button** (`beitritt-bestaetigen.php`, POST), nicht schon beim Öffnen des Links – Mail-Virenscanner öffnen Links automatisch. Gespeichert werden Zeitpunkt, IP und Browser der Bestätigung.

@@ -19,6 +19,7 @@ require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/applications.php';
 require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/mail.php';
 
 membership_json_headers();
+membership_require_enabled();
 $input = membership_read_json_post();
 
 // Honeypot: a field hidden from humans. Bots that fill it get a fake success.
