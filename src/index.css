@@ -87,6 +87,8 @@ body {
 .layout-main {
   flex: 1 0 auto;
   min-width: 0;
+  /* Same as the page sections (bg-slate-50), so short pages show no white gap above the footer. */
+  background-color: var(--color-slate-50);
 }
 
 @media (pointer: fine) {

@@ -229,7 +229,7 @@ export default function NewsDetail() {
   const hasMoreDesktopPosts = posts.length > DESKTOP_NEWS_LIMIT;
 
   return (
-    <article className="bg-white">
+    <article className="bg-slate-50">
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 sm:px-8 sm:py-12 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-12 lg:px-12">
         <aside className="hidden min-w-0 lg:sticky lg:top-8 lg:block lg:self-start">
           <h2 className="font-heading text-sm font-bold uppercase tracking-wide text-blue-700">News</h2>
@@ -245,7 +245,7 @@ export default function NewsDetail() {
                   className={`flex min-w-0 gap-3 rounded-md border px-3 py-3 transition hover:text-blue-700 ${
                     isCurrent
                       ? "border-blue-200 bg-blue-50 text-[#002f5f]"
-                      : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50"
+                      : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-white"
                   }`}
                   aria-current={isCurrent ? "page" : undefined}
                 >
