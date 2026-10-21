@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PDFs of a confirmed membership application (tFPDF, UTF-8 via DejaVu fonts): the application
- * itself and, as a separate document, the SEPA direct debit mandate. Both carry the same
- * checksum, which covers the whole application.
+ * PDFs of a confirmed membership application (tFPDF, UTF-8 with the site fonts Inter and Montserrat):
+ * the application itself and, as a separate document, the SEPA direct debit mandate. Both carry the
+ * same checksum, which covers the whole application.
  *
  * Rendered on demand from the stored (encrypted) data - the PDFs themselves are never stored,
  * so they always show exactly what the signature covers.
@@ -25,7 +25,7 @@ class MembershipApplicationPdf extends tFPDF
     public function Footer(): void
     {
         $this->SetY(-15);
-        $this->SetFont('DejaVu', '', 7.5);
+        $this->SetFont('Inter', '', 7.5);
         $this->SetTextColor(...MEMBERSHIP_PDF_GREY);
         $this->Cell(0, 4, $this->footerText, 0, 0, 'L');
         $this->Cell(0, 4, 'Seite ' . $this->PageNo() . ' von {nb}', 0, 0, 'R');
@@ -34,7 +34,7 @@ class MembershipApplicationPdf extends tFPDF
     public function sectionTitle(string $title): void
     {
         $this->Ln(3);
-        $this->SetFont('DejaVu', 'B', 11);
+        $this->SetFont('Inter', 'B', 11);
         $this->SetTextColor(...MEMBERSHIP_PDF_BLUE);
         $this->Cell(0, 7, $title, 'B', 1);
         $this->Ln(1.5);
@@ -43,23 +43,23 @@ class MembershipApplicationPdf extends tFPDF
 
     public function row(string $label, string $value): void
     {
-        $this->SetFont('DejaVu', 'B', 9.5);
+        $this->SetFont('Inter', 'B', 9.5);
         $this->Cell(MEMBERSHIP_PDF_LABEL_WIDTH, 5, $label);
-        $this->SetFont('DejaVu', '', 9.5);
+        $this->SetFont('Inter', '', 9.5);
         $this->MultiCell(0, 5, $value !== '' ? $value : '–', 0, 'L');
     }
 
     public function paragraph(string $text, float $size = 9): void
     {
-        $this->SetFont('DejaVu', '', $size);
+        $this->SetFont('Inter', '', $size);
         $this->MultiCell(0, 4.6, $text, 0, 'L');
     }
 
     public function checkItem(bool $checked, string $text): void
     {
-        $this->SetFont('DejaVu', 'B', 9.5);
+        $this->SetFont('Inter', 'B', 9.5);
         $this->Cell(8, 4.6, $checked ? '[x]' : '[ ]');
-        $this->SetFont('DejaVu', '', 9);
+        $this->SetFont('Inter', '', 9);
         $this->MultiCell(0, 4.6, $text, 0, 'L');
         $this->Ln(1.5);
     }
@@ -94,8 +94,9 @@ function membership_pdf_start(array $row, string $title): MembershipApplicationP
     $signature = $row['signature'] ?? membership_compute_signature($row);
 
     $pdf = new MembershipApplicationPdf('P', 'mm', 'A4');
-    $pdf->AddFont('DejaVu', '', 'DejaVuSans.ttf', true);
-    $pdf->AddFont('DejaVu', 'B', 'DejaVuSans-Bold.ttf', true);
+    $pdf->AddFont('Inter', '', 'Inter-Regular.ttf', true);
+    $pdf->AddFont('Inter', 'B', 'Inter-Bold.ttf', true);
+    $pdf->AddFont('Montserrat', 'B', 'Montserrat-Bold.ttf', true);
     $pdf->AddFont('DejaVuMono', '', 'DejaVuSansMono.ttf', true);
     $pdf->SetTitle("{$title} {$row['reference']}", true);
     $pdf->SetAuthor(MEMBERSHIP_CLUB_NAME, true);
@@ -107,10 +108,10 @@ function membership_pdf_start(array $row, string $title): MembershipApplicationP
     $pdf->AddPage();
 
     // Header
-    $pdf->SetFont('DejaVu', 'B', 17);
+    $pdf->SetFont('Montserrat', 'B', 17);
     $pdf->SetTextColor(...MEMBERSHIP_PDF_BLUE);
     $pdf->Cell(0, 9, MEMBERSHIP_CLUB_NAME, 0, 1);
-    $pdf->SetFont('DejaVu', '', 12);
+    $pdf->SetFont('Inter', '', 12);
     $pdf->SetTextColor(0, 0, 0);
     $pdf->Cell(0, 7, $title, 0, 1);
     $pdf->Ln(3);
@@ -119,7 +120,7 @@ function membership_pdf_start(array $row, string $title): MembershipApplicationP
     $boxTop = $pdf->GetY();
     $pdf->SetLeftMargin(24);
     $pdf->SetY($boxTop + 2.5);
-    $pdf->SetFont('DejaVu', 'B', 11);
+    $pdf->SetFont('Inter', 'B', 11);
     $pdf->SetTextColor(...MEMBERSHIP_PDF_GREEN);
     $pdf->Cell(0, 6, 'EINGEREICHT – per E-Mail bestätigt', 0, 1);
     $pdf->SetTextColor(0, 0, 0);

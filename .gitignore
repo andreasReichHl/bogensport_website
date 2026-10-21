@@ -30,3 +30,8 @@ private/member-area/config.local.php
 # Hochgeladene News-Bilder sind Inhalte, kein Code
 public/uploads/news/*
 !public/uploads/news/.gitkeep
+
+# tFPDF-Schriftcache, enthält absolute Pfade und wird auf jedem Rechner neu erzeugt
+private/vendor/tfpdf/font/unifont/*.cw.dat
+private/vendor/tfpdf/font/unifont/*.cw127.php
+private/vendor/tfpdf/font/unifont/*.mtx.php
