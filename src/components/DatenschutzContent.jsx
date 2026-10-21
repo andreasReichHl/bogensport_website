@@ -1,3 +1,4 @@
+import { membershipEnabled } from "../utils/features.js";
 import { mailto, siteConfig } from "../utils/siteConfig.js";
 
 /**
@@ -183,60 +184,62 @@ export default function DatenschutzContent({ headingLevel = 2 }) {
         </p>
       </section>
 
-      <section id="online-mitgliedsantrag" className="scroll-mt-28">
-        <Heading className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
-          Online-Mitgliedsantrag
-        </Heading>
-        <Subheading className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</Subheading>
-        <p>
-          Wenn Sie über unsere Website die Mitgliedschaft beantragen, verarbeiten wir die Angaben aus dem Formular:
-          Name, Anschrift, Geburtsdatum, Geschlecht, E-Mail-Adresse, Telefonnummern (mobil und privat), die gewählte Mitgliedsart,
-          die Bankverbindung für das SEPA-Lastschriftmandat sowie bei Minderjährigen Name und Kontaktdaten der
-          Erziehungsberechtigten. Zweck ist die Bearbeitung des Antrags und die Durchführung der Mitgliedschaft.
-        </p>
-        <p className="mt-4">
-          Den Antrag müssen Sie über einen Link bestätigen, den wir an die angegebene E-Mail-Adresse senden
-          (Double-Opt-in). Als Nachweis, dass der Antrag von Ihnen stammt, speichern wir dabei Zeitpunkt,
-          IP-Adresse und Browserkennung des Absendens und der Bestätigung. Nach der Bestätigung erhalten Sie und
-          der Vorstand eine Zusammenfassung als PDF. Eine Prüfsumme auf dem PDF belegt, dass die Angaben nicht
-          nachträglich verändert wurden.
-        </p>
-        <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Rechtsgrundlage</Subheading>
-        <p>
-          Die Verarbeitung der Antragsdaten erfolgt zur Durchführung vorvertraglicher Maßnahmen und der
-          Mitgliedschaft gemäß Art. 6 Abs. 1 lit. b DSGVO. Die Speicherung der Nachweisdaten (Zeitpunkt,
-          IP-Adresse, Browserkennung) beruht auf unserem berechtigten Interesse, die Abgabe der Beitrittserklärung
-          und die Erteilung des Lastschriftmandats nachweisen zu können (Art. 6 Abs. 1 lit. f DSGVO). Die
-          freiwillige Einwilligung zur Veröffentlichung von Fotos beruht auf Art. 6 Abs. 1 lit. a DSGVO und kann
-          jederzeit mit Wirkung für die Zukunft widerrufen werden.
-        </p>
-        <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Empfänger</Subheading>
-        <p>
-          Die Angaben erhalten der Vorstand und – nach der Bestätigung – unsere Mitgliederverwaltung easyVerein
-          (siehe oben), wo der Vorstand über die Aufnahme entscheidet. Die E-Mails versenden wir über das
-          E-Mail-Postfach unseres Vereins bei unserem Hosting-Anbieter.
-        </p>
-        <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Speicherdauer</Subheading>
-        <p>
-          Auf dem Server unserer Website werden die Antragsdaten verschlüsselt gespeichert. Nicht bestätigte
-          Anträge können nur innerhalb von 48 Stunden bestätigt werden; danach löschen wir sie, spätestens nach
-          3 Tagen. Bestätigte Anträge werden an easyVerein übertragen; die Kopie auf dem
-          Server unserer Website löschen wir, sobald der Vorstand über den Antrag entschieden hat, spätestens
-          90 Tage nach der Übertragung. In easyVerein speichern wir die Daten für
-          die Dauer der Mitgliedschaft und darüber hinaus, soweit gesetzliche Aufbewahrungspflichten bestehen.
-          Wird ein Antrag abgelehnt, löschen wir die Daten, soweit keine Aufbewahrungspflichten entgegenstehen.
-        </p>
-        <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Bereitstellung vorgeschrieben oder erforderlich</Subheading>
-        <p>
-          Die mit * gekennzeichneten Angaben sind für die Mitgliedschaft erforderlich; ohne sie können wir den
-          Antrag nicht bearbeiten. Die Einwilligung zur Veröffentlichung von Fotos ist freiwillig und hat keinen
-          Einfluss auf die Aufnahme.
-        </p>
-      </section>
+      {membershipEnabled && (
+        <section id="online-mitgliedsantrag" className="scroll-mt-28">
+          <Heading className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
+            Online-Mitgliedsantrag
+          </Heading>
+          <Subheading className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</Subheading>
+          <p>
+            Wenn Sie über unsere Website die Mitgliedschaft beantragen, verarbeiten wir die Angaben aus dem Formular:
+            Name, Anschrift, Geburtsdatum, Geschlecht, E-Mail-Adresse, Telefonnummern (mobil und privat), die gewählte Mitgliedsart,
+            die Bankverbindung für das SEPA-Lastschriftmandat sowie bei Minderjährigen Name und Kontaktdaten der
+            Erziehungsberechtigten. Zweck ist die Bearbeitung des Antrags und die Durchführung der Mitgliedschaft.
+          </p>
+          <p className="mt-4">
+            Den Antrag müssen Sie über einen Link bestätigen, den wir an die angegebene E-Mail-Adresse senden
+            (Double-Opt-in). Als Nachweis, dass der Antrag von Ihnen stammt, speichern wir dabei Zeitpunkt,
+            IP-Adresse und Browserkennung des Absendens und der Bestätigung. Nach der Bestätigung erhalten Sie und
+            der Vorstand eine Zusammenfassung als PDF. Eine Prüfsumme auf dem PDF belegt, dass die Angaben nicht
+            nachträglich verändert wurden.
+          </p>
+          <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Rechtsgrundlage</Subheading>
+          <p>
+            Die Verarbeitung der Antragsdaten erfolgt zur Durchführung vorvertraglicher Maßnahmen und der
+            Mitgliedschaft gemäß Art. 6 Abs. 1 lit. b DSGVO. Die Speicherung der Nachweisdaten (Zeitpunkt,
+            IP-Adresse, Browserkennung) beruht auf unserem berechtigten Interesse, die Abgabe der Beitrittserklärung
+            und die Erteilung des Lastschriftmandats nachweisen zu können (Art. 6 Abs. 1 lit. f DSGVO). Die
+            freiwillige Einwilligung zur Veröffentlichung von Fotos beruht auf Art. 6 Abs. 1 lit. a DSGVO und kann
+            jederzeit mit Wirkung für die Zukunft widerrufen werden.
+          </p>
+          <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Empfänger</Subheading>
+          <p>
+            Die Angaben erhalten der Vorstand und – nach der Bestätigung – unsere Mitgliederverwaltung easyVerein
+            (siehe oben), wo der Vorstand über die Aufnahme entscheidet. Die E-Mails versenden wir über das
+            E-Mail-Postfach unseres Vereins bei unserem Hosting-Anbieter.
+          </p>
+          <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Speicherdauer</Subheading>
+          <p>
+            Auf dem Server unserer Website werden die Antragsdaten verschlüsselt gespeichert. Nicht bestätigte
+            Anträge können nur innerhalb von 48 Stunden bestätigt werden; danach löschen wir sie, spätestens nach
+            3 Tagen. Bestätigte Anträge werden an easyVerein übertragen; die Kopie auf dem
+            Server unserer Website löschen wir, sobald der Vorstand über den Antrag entschieden hat, spätestens
+            90 Tage nach der Übertragung. In easyVerein speichern wir die Daten für
+            die Dauer der Mitgliedschaft und darüber hinaus, soweit gesetzliche Aufbewahrungspflichten bestehen.
+            Wird ein Antrag abgelehnt, löschen wir die Daten, soweit keine Aufbewahrungspflichten entgegenstehen.
+          </p>
+          <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Bereitstellung vorgeschrieben oder erforderlich</Subheading>
+          <p>
+            Die mit * gekennzeichneten Angaben sind für die Mitgliedschaft erforderlich; ohne sie können wir den
+            Antrag nicht bearbeiten. Die Einwilligung zur Veröffentlichung von Fotos ist freiwillig und hat keinen
+            Einfluss auf die Aufnahme.
+          </p>
+        </section>
+      )}
 
       <section>
         <Heading className="mb-3 wrap-break-word font-heading text-lg font-bold text-slate-950 sm:text-xl">
-          Kontaktaufnahme per E-Mail
+          Kontaktaufnahme per E-Mail und Probetraining-Formular
         </Heading>
         <Subheading className="mb-2 font-heading text-lg font-semibold text-slate-950">Art und Zweck der Verarbeitung</Subheading>
         <p>
@@ -244,6 +247,13 @@ export default function DatenschutzContent({ headingLevel = 2 }) {
           insbesondere Ihre E-Mail-Adresse, Ihren Namen, den Inhalt Ihrer Nachricht und gegebenenfalls weitere von
           Ihnen angegebene Kontaktdaten. Die Verarbeitung erfolgt zum Zweck der Bearbeitung Ihrer Anfrage und der
           anschließenden Kommunikation mit Ihnen.
+        </p>
+        <p className="mt-4">
+          Anfragen über das Formular für ein Probetraining (Name, Alter, E-Mail-Adresse, Telefonnummer, bei Kindern
+          der Name des Erziehungsberechtigten, Erfahrung, Ausrüstung und Ihre Nachricht) werden von unserem Webserver per E-Mail an den Verein übermittelt; ein externer Formulardienst
+          wird dafür nicht genutzt. Auf dem Webserver werden die Angaben nicht gespeichert. Zum Schutz vor
+          missbräuchlichen Massenanfragen speichern wir lediglich einen nicht umkehrbaren Hashwert Ihrer IP-Adresse
+          für höchstens 24 Stunden.
         </p>
         <Subheading className="mb-2 mt-5 font-heading text-lg font-semibold text-slate-950">Rechtsgrundlage</Subheading>
         <p>

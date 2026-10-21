@@ -13,6 +13,7 @@ require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/http.php';
 require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/process.php';
 
 membership_json_headers();
+membership_require_enabled();
 $input = membership_read_json_post();
 $now = membership_now();
 

@@ -12,6 +12,13 @@ function membership_json_headers(): void
     header('Cache-Control: no-store');
 }
 
+function membership_require_enabled(): void
+{
+    if (!membership_config()['enabled']) {
+        membership_respond(404, ['error' => 'not_found']);
+    }
+}
+
 function membership_respond(int $status, array $body): never
 {
     http_response_code($status);

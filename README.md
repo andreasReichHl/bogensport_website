@@ -58,7 +58,6 @@ php private/member-area/check-db.php   # DB-Verbindungscheck (nur per CLI nutzba
 | `MEMBER_AREA_PRIVATE_PATH` | PHP | Pfad zu `private/member-area`, falls abweichend vom Standard-Layout |
 | `MEMBER_AREA_NEWS_IMAGE_RETENTION_DAYS` | PHP | Wie lange Bilder abgelaufener News-Beiträge aufbewahrt werden (Default: 30) |
 | `VITE_BASE_PATH` | Vite | Basis-Pfad, falls die App nicht unter `/` ausgeliefert wird |
-| `VITE_FORMSPREE_ENDPOINT` | Vite | Formspree-Endpunkt für das Probetraining-Formular |
 | `EASYVEREIN_API_TOKEN` | PHP | Einmaliger Bootstrap-Token für die easyVerein-API (siehe unten) |
 
 ## Mitgliederbereich
@@ -71,9 +70,20 @@ Termine werden live aus dem easyVerein-Kalender **"Turniere"** geladen (`GET /ev
 
 Der API-Token wird automatisch verwaltet (`private/easyverein/token.php`): er liegt in der Tabelle `easyverein_tokens`, wird nach 15 von 30 Tagen Gültigkeit automatisch erneuert (`GET /refresh-token`) und ist race-safe für mehrere gleichzeitige PHP-Worker. Für den allerersten Start (keine Zeile in der Tabelle vorhanden) muss einmalig ein in der easyVerein-Oberfläche (Einstellungen → easyVerein API) generierter Token über die Umgebungsvariable `EASYVEREIN_API_TOKEN` gesetzt werden.
 
+## Probetraining-Formular
+
+`public/probetraining-absenden.php` (POST, JSON) prüft die Anfrage serverseitig (`private/probetraining/request.php`) und schickt sie per Mail an `trial_training_email` (Standard: info@) – über dasselbe SMTP-Postfach wie der Mitgliedsbeitritt (`membership.mail`), Antworten gehen per Reply-To direkt an den Absender. Kein externer Formulardienst. Spamschutz:
+
+- Honeypot-Feld und Zeitfalle (abgeschickt weniger als 3 Sekunden nach dem Laden) – solche Anfragen bekommen eine Scheinbestätigung, es geht keine Mail raus.
+- Links in Namen oder Nachricht werden abgelehnt.
+- Limit: 5 Anfragen pro Stunde und IP, 30 pro Stunde insgesamt (greift es, steht ein Eintrag im PHP-Fehlerlog). Gespeichert wird dafür nur ein Hash der IP (Tabelle `probetraining_requests`, Einträge nach 24 Stunden gelöscht).
+- Bestätigungsmails an die eingetragene Adresse gibt es bewusst nicht – das Formular kann so nicht missbraucht werden, um Mails an Dritte zu schicken.
+
 ## Online-Mitgliedsbeitritt
 
 Eigenes Beitrittsformular, das ausschließlich die easyVerein-API nutzt (kein easyVerein-Iframe). Ablauf: Formular → Speicherung als `pending` → Bestätigungslink per Mail (Double-Opt-in) → Übertragung an easyVerein als Mitgliedsantrag (`is_application`) + zwei PDFs (Mitgliedsantrag und SEPA-Lastschriftmandat) an den Antragsteller.
+
+- **Noch nicht live:** Seite `/mitglied-werden`, Footer-Link, Abschnitt auf der Vereinsseite und der Datenschutz-Abschnitt erscheinen nur im Dev-Server oder in einem Build mit `VITE_MEMBERSHIP_ENABLED=true npm run build` (`src/utils/features.js`). Die Endpunkte `beitritt-*.php` antworten mit 404, solange in der `config.local.php` nicht `membership.enabled => true` steht. Zum Go-live beides einschalten.
 
 - `public/beitritt-formular.php` (GET) liefert die Mitgliedsarten und den Wortlaut aller Erklärungen (`private/membership/texts.php`, versioniert über `MEMBERSHIP_TEXTS_VERSION`).
 - `public/beitritt-absenden.php` (POST, JSON) validiert serverseitig, speichert in `membership_applications` und verschickt den Bestätigungslink per Mail (SMTP über PHPMailer, `private/vendor/phpmailer/`). Schlägt der Mailversand fehl, wird der Antrag wieder gelöscht. Die Antragsdaten (inkl. IBAN) liegen dort **verschlüsselt** (libsodium); unbestätigte Anträge werden nach `confirm_ttl_hours` gelöscht. Spam-Schutz: Honeypot-Feld + Limits pro IP und E-Mail.

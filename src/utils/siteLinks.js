@@ -1,3 +1,5 @@
+import { membershipEnabled } from "./features.js";
+
 const basePath = import.meta.env.BASE_URL;
 
 function withBasePath(path) {
@@ -18,7 +20,12 @@ export const membershipLink = { label: "Mitglied werden", to: "/mitglied-werden"
 
 export const memberAreaLink = { label: "Mitgliederbereich", href: withBasePath("/mitglieder/") };
 
-export const footerNavigationLinks = [...mainNavigationLinks, trialTrainingLink, membershipLink, memberAreaLink];
+export const footerNavigationLinks = [
+  ...mainNavigationLinks,
+  trialTrainingLink,
+  ...(membershipEnabled ? [membershipLink] : []),
+  memberAreaLink,
+];
 
 export const satzungPdfLink = { label: "Satzung", href: withBasePath("/downloads/satzung.pdf") };
 

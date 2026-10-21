@@ -11,6 +11,7 @@ require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/texts.php';
 require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/http.php';
 
 membership_json_headers();
+membership_require_enabled();
 
 try {
     echo json_encode(

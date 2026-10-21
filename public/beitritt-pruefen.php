@@ -13,6 +13,7 @@ require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/http.php';
 require_once dirname(MEMBER_AREA_PRIVATE_PATH) . '/membership/applications.php';
 
 membership_json_headers();
+membership_require_enabled();
 
 try {
     $application = membership_find_by_token((string)($_GET['token'] ?? ''), membership_now());

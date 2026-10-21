@@ -7,6 +7,7 @@ import Datenschutz from './pages/Datenschutz.jsx'
 import HomePage from './pages/HomePage.jsx'
 import Impressum from './pages/Impressum.jsx'
 import Layout from './Layout.jsx'
+import { membershipEnabled } from './utils/features.js'
 import MitgliedWerden from "./pages/MitgliedWerden.jsx";
 import MitgliedschaftBestaetigen from "./pages/MitgliedschaftBestaetigen.jsx";
 import News from "./pages/News.jsx";
@@ -60,14 +61,16 @@ const router = createBrowserRouter(
           path: 'news/:id',
           element: <NewsDetail />,
         },
-        {
-          path: 'mitglied-werden',
-          element: <MitgliedWerden />,
-        },
-        {
-          path: 'mitglied-werden/bestaetigen',
-          element: <MitgliedschaftBestaetigen />,
-        },
+        ...(membershipEnabled ? [
+          {
+            path: 'mitglied-werden',
+            element: <MitgliedWerden />,
+          },
+          {
+            path: 'mitglied-werden/bestaetigen',
+            element: <MitgliedschaftBestaetigen />,
+          },
+        ] : []),
         {
           path: 'satzung',
           element: <Satzung />,

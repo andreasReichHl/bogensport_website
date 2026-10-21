@@ -24,6 +24,9 @@ function membership_config(): array
     $raw = member_area_config()['membership'] ?? [];
 
     $config = [
+        // Master switch for the public endpoints (beitritt-*.php): off until the online application
+        // goes live, they then answer 404. The page itself is hidden via VITE_MEMBERSHIP_ENABLED.
+        'enabled' => (bool)($raw['enabled'] ?? false),
         // Version of the Satzung the applicant accepts - must match satzungMeta.version in
         // src/data/satzung.js, otherwise submissions are rejected (the form shows an outdated text).
         'satzung_version' => (string)($raw['satzung_version'] ?? '2009-10-02'),
