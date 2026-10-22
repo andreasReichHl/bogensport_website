@@ -45,7 +45,12 @@ function member_area_is_local_environment(): bool
     // those are attacker-controllable on many hosting setups, and using them here would
     // let a spoofed request switch a production deployment onto config.local.example.php,
     // whose JWT secret is committed to version control. PHP_SAPI is set by how the process
-    // was started (the CLI, or `php -S` for local/dev serving) and cannot be influenced by
-    // an incoming HTTP request.
-    return in_array(PHP_SAPI, ['cli', 'cli-server'], true);
+    // was started and cannot be influenced by an incoming HTTP request.
+    if (PHP_SAPI === 'cli-server') {
+        return true;
+    }
+
+    // The CLI also runs in production (the Strato cron job), so it only counts as local in
+    // a development checkout. The deployment holds dist/ and private/, never package.json.
+    return PHP_SAPI === 'cli' && is_file(dirname(__DIR__, 2) . '/package.json');
 }

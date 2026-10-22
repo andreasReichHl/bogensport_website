@@ -124,6 +124,18 @@ function member_area_record_failed_login(string $identifierHash, string $ipHash)
         ->execute([$identifierHash, $ipHash]);
 }
 
+function member_area_timing_dummy_hash(): string
+{
+    // An existing user's hash has the same algorithm and cost as a real check. Hashing a
+    // dummy password here instead would cost as much as the verify itself and make
+    // unknown login names twice as slow - exactly the difference this is meant to hide.
+    $passwordHash = member_area_db()->query('SELECT password_hash FROM users ORDER BY id LIMIT 1')->fetchColumn();
+
+    return is_string($passwordHash) && $passwordHash !== ''
+        ? $passwordHash
+        : '$2y$10$MJGsihG/QHYDarB4sPmr7evfMlHpKBZVfOgyGtVb8b4rjnysvfSP2';
+}
+
 /**
  * @return string 'ok', 'invalid' or 'locked'
  */
@@ -155,9 +167,9 @@ function member_area_login(string $identifier, string $password): string
     $statement->execute([$normalizedIdentifier, $normalizedIdentifier, $normalizedIdentifier]);
     $user = $statement->fetch();
 
-    // Always run password_verify, even for unknown users, so the response time does
-    // not reveal which login names exist.
-    $passwordHash = $user ? (string)$user['password_hash'] : password_hash('timing-dummy', PASSWORD_DEFAULT);
+    // Always run exactly one password_verify, even for unknown users, so the response
+    // time does not reveal which login names exist.
+    $passwordHash = $user ? (string)$user['password_hash'] : member_area_timing_dummy_hash();
     $passwordMatches = password_verify($password, $passwordHash);
 
     if (!$user || !(int)$user['is_active'] || !$passwordMatches) {

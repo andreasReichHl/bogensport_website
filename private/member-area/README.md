@@ -16,8 +16,8 @@ Diese Werte gehören nicht ins Git-Repository.
 
 Die Anwendung wählt die Konfiguration automatisch:
 
-- Lokal unter `localhost` oder `127.0.0.1`: `private/member-area/config.local.example.php`
-- Auf Strato/Produktion: `private/member-area/config.local.php`
+- Lokal (`php -S`, oder PHP-CLI in einem Entwicklungs-Checkout mit `package.json` neben `private/`): `private/member-area/config.local.example.php`
+- Auf Strato/Produktion, auch für den Cronjob per PHP-CLI: `private/member-area/config.local.php`
 
 `config.local.example.php` enthält die lokale Docker-Datenbank.
 `config.local.php` enthält die Strato-Datenbank und muss auf dem Server mit echtem DB-Passwort vorhanden sein.

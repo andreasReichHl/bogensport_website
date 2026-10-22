@@ -191,10 +191,11 @@ function member_area_news_sanitize_dom_node(DOMNode $node): void
         }
 
         if ($tagName === 'a') {
-            // Mirror the browser's URL parsing (which strips tabs/newlines from anywhere
-            // in the URL, including inside the scheme) before validating the scheme, so a
-            // payload like "java\tscript:" can't sneak a disallowed scheme past this check.
-            $href = preg_replace('/[\t\r\n]/', '', trim($child->getAttribute('href'))) ?? '';
+            // Drop all control characters before validating the scheme: browsers strip
+            // tabs/newlines anywhere and other control characters around the URL, and
+            // libxml drops the rest when saving. Either way "java\tscript:" or
+            // "\x01javascript:" would turn into a working javascript: URL after this check.
+            $href = trim(preg_replace('/[\x00-\x1F\x7F]/', '', $child->getAttribute('href')) ?? '');
             $scheme = null;
 
             if (preg_match('/^([a-z][a-z0-9+.\-]*):/i', $href, $schemeMatch)) {
